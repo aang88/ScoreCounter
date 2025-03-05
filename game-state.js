@@ -1,4 +1,4 @@
-// Improved game-state.js - Game state management with Best of 3 system
+// Comprehensive Game State Manager
 class GameStateManager {
     constructor(counterManager, timerManager) {
         this.counterManager = counterManager;
@@ -19,6 +19,96 @@ class GameStateManager {
     setRoundInfoElement(element) {
         this.roundInfoElement = element;
         return this;
+    }
+    
+    // Update round information display
+    updateRoundInfo() {
+        if (this.roundInfoElement) {
+            // Count current wins
+            const winCounts = {};
+            for (const winner of this.roundWinners) {
+                if (winner === 'Tie' || winner === 'None') continue;
+                winCounts[winner] = (winCounts[winner] || 0) + 1;
+            }
+            
+            // Format as "Round X - Team A: 1, Team B: 0"
+            let infoText = `Round ${this.currentRound}`;
+            
+            if (Object.keys(winCounts).length > 0) {
+                infoText += " - ";
+                for (const [team, wins] of Object.entries(winCounts)) {
+                    infoText += `${team}: ${wins}, `;
+                }
+                infoText = infoText.slice(0, -2); // Remove trailing comma and space
+            }
+            
+            this.roundInfoElement.textContent = infoText;
+        }
+    }
+    
+    // Save scores for the current round
+    saveRoundScores() {
+        // Get current counter values
+        const roundScores = {};
+        for (const [id, value] of Object.entries(this.counterManager.counters || {})) {
+            roundScores[id] = value;
+        }
+        
+        // Save for this round
+        this.scores[`round${this.currentRound}`] = roundScores;
+        
+        console.log(`Round ${this.currentRound} scores saved:`, roundScores);
+    }
+    
+    // Calculate total scores across all rounds
+    calculateTotalScores() {
+        const totalScores = {};
+        
+        // Sum scores from all rounds
+        for (const roundScores of Object.values(this.scores)) {
+            for (const [id, score] of Object.entries(roundScores)) {
+                totalScores[id] = (totalScores[id] || 0) + score;
+            }
+        }
+        
+        return totalScores;
+    }
+    
+    // Determine winner of a specific round
+    determineRoundWinner(roundNum) {
+        const roundScores = this.scores[`round${roundNum}`] || {};
+        let highestScore = -1;
+        let winner = 'None';
+        
+        for (const [team, score] of Object.entries(roundScores)) {
+            if (score > highestScore) {
+                highestScore = score;
+                winner = team;
+            } else if (score === highestScore && score > 0) {
+                winner = 'Tie';
+            }
+        }
+        
+        return winner;
+    }
+    
+    // Check if we have an overall winner based on best-of-N system
+    checkForOverallWinner() {
+        const winsNeeded = Math.ceil(this.maxRounds / 2);
+        const winCounts = {};
+        
+        // Count wins for each team
+        for (const winner of this.roundWinners) {
+            if (winner === 'Tie') continue;
+            winCounts[winner] = (winCounts[winner] || 0) + 1;
+            
+            // Check if anyone has enough wins
+            if (winCounts[winner] >= winsNeeded) {
+                return winner;
+            }
+        }
+        
+        return null; // No overall winner yet
     }
     
     // Start a new game
@@ -46,7 +136,7 @@ class GameStateManager {
         this.timerManager.reset();
         
         // Set timer duration (2 minutes per round)
-        this.timerManager.setDuration(120);
+        this.timerManager.setDuration(60);
         
         // Start timer for first round
         this.timerManager.start();
@@ -116,7 +206,8 @@ class GameStateManager {
         // Announce new round
         this.announceGameState(`Round ${this.currentRound} started!`);
     }
-
+    
+    // Reset all counters to zero
     resetAllCounters() {
         // Send reset message via WebSocket
         if (this.counterManager.socket && this.counterManager.socket.readyState === WebSocket.OPEN) {
@@ -124,6 +215,111 @@ class GameStateManager {
                 type: 'reset-counters'
             }));
         }
+    }
+    
+    // Announce game state changes
+    announceGameState(message) {
+        console.log(message);
+        
+        // Create or update announcement element
+        let announcementElement = document.getElementById('game-announcement');
+        if (!announcementElement) {
+            announcementElement = document.createElement('div');
+            announcementElement.id = 'game-announcement';
+            announcementElement.className = 'game-announcement';
+            document.body.appendChild(announcementElement);
+        }
+        
+        announcementElement.textContent = message;
+        announcementElement.style.opacity = '1';
+        
+        // Fade out after 3 seconds
+        setTimeout(() => {
+            announcementElement.style.opacity = '0';
+        }, 3000);
+    }
+    
+    // Display round summary
+    displayRoundSummary(isFinalRound, overallWinner = null) {
+        const roundScores = this.scores[`round${this.currentRound}`] || {};
+        const roundWinner = this.roundWinners[this.currentRound - 1] || 'None';
+        
+        // Create modal for round summary
+        const modal = document.createElement('div');
+        modal.className = 'scores-modal';
+        modal.style.display = 'block';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'scores-modal-content';
+        
+        const title = document.createElement('h2');
+        title.textContent = `Round ${this.currentRound} Complete`;
+        
+        // Round winner announcement
+        const winnerAnnouncement = document.createElement('div');
+        winnerAnnouncement.className = 'winner-announcement';
+        winnerAnnouncement.textContent = `Round Winner: ${roundWinner}`;
+        
+        // Match standings
+        const standings = document.createElement('div');
+        standings.className = 'match-standings';
+        
+        // Calculate wins for each team
+        const winCounts = {};
+        for (const winner of this.roundWinners) {
+            if (winner === 'Tie' || winner === 'None') continue;
+            winCounts[winner] = (winCounts[winner] || 0) + 1;
+        }
+        
+        // Create standings text
+        let standingsText = "Match Standing: ";
+        for (const [team, wins] of Object.entries(winCounts)) {
+            standingsText += `${team} (${wins} wins) `;
+        }
+        standings.textContent = standingsText;
+        
+        const scoresList = document.createElement('div');
+        scoresList.className = 'round-scores';
+        
+        // Add scores for each team
+        for (const [team, score] of Object.entries(roundScores)) {
+            const scoreItem = document.createElement('div');
+            scoreItem.className = 'score-item';
+            if (team === roundWinner) {
+                scoreItem.classList.add('winner');
+            }
+            scoreItem.innerHTML = `<span class="team-name">${team}</span>: <span class="team-score">${score}</span>`;
+            scoresList.appendChild(scoreItem);
+        }
+        
+        // Create button to start next round or end game
+        const continueButton = document.createElement('button');
+        continueButton.className = 'continue-button';
+        
+        if (isFinalRound) {
+            continueButton.textContent = 'Show Final Results';
+            continueButton.onclick = () => {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+                this.endGame(overallWinner);
+            };
+        } else {
+            continueButton.textContent = 'Start Next Round';
+            continueButton.onclick = () => {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+                this.startNextRound();
+            };
+        }
+        
+        // Assemble modal
+        modalContent.appendChild(title);
+        modalContent.appendChild(winnerAnnouncement);
+        modalContent.appendChild(standings);
+        modalContent.appendChild(scoresList);
+        modalContent.appendChild(continueButton);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
     }
     
     // End the game
@@ -171,10 +367,8 @@ class GameStateManager {
         // Display final scores table
         this.displayFinalScores(overallWinner);
     }
-
-    // [All other methods remain the same as in the previous implementation]
-
-    // In the displayFinalScores method, modify the New Game button:
+    
+    // Display final scores
     displayFinalScores(overallWinner) {
         const totalScores = this.calculateTotalScores();
         
@@ -210,21 +404,102 @@ class GameStateManager {
                 // Prompt for rounds
                 const rounds = parseInt(prompt('How many rounds (for best of N)?', '3')) || 3;
                 
-                // Reset everything before starting a new game
-                this.currentRound = 1;
-                this.maxRounds = rounds;
-                this.isGameOver = false;
-                this.scores = {};
-                this.roundWinners = [];
-                
                 // Start the new game
                 this.startGame(rounds);
             }
         };
         
-        // Rest of the existing method remains the same...
-        // (table creation code, etc.)
-    
+        // Create table for final scores
+        const table = document.createElement('table');
+        table.className = 'scores-table';
+        
+        // Create table header
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        
+        const teamHeader = document.createElement('th');
+        teamHeader.textContent = 'Team';
+        headerRow.appendChild(teamHeader);
+        
+        // Add headers for each round
+        for (let i = 1; i <= this.currentRound; i++) {
+            const roundHeader = document.createElement('th');
+            roundHeader.textContent = `Round ${i}`;
+            headerRow.appendChild(roundHeader);
+        }
+        
+        const winnerHeader = document.createElement('th');
+        winnerHeader.textContent = 'Round Wins';
+        headerRow.appendChild(winnerHeader);
+        
+        const totalHeader = document.createElement('th');
+        totalHeader.textContent = 'Total Points';
+        headerRow.appendChild(totalHeader);
+        
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+        
+        // Create table body
+        const tbody = document.createElement('tbody');
+        
+        // Get all team names
+        const teams = new Set();
+        for (let i = 1; i <= this.currentRound; i++) {
+            const roundScores = this.scores[`round${i}`] || {};
+            for (const team of Object.keys(roundScores)) {
+                teams.add(team);
+            }
+        }
+        
+        // Count wins per team
+        const winCounts = {};
+        for (const winner of this.roundWinners) {
+            if (winner === 'Tie' || winner === 'None') continue;
+            winCounts[winner] = (winCounts[winner] || 0) + 1;
+        }
+        
+        // Process each team's scores
+        for (const team of teams) {
+            const row = document.createElement('tr');
+            
+            // Team name cell
+            const teamCell = document.createElement('td');
+            teamCell.textContent = team;
+            teamCell.className = team === overallWinner ? 'winner' : '';
+            row.appendChild(teamCell);
+            
+            // Round scores cells
+            for (let i = 1; i <= this.currentRound; i++) {
+                const roundCell = document.createElement('td');
+                const roundScores = this.scores[`round${i}`] || {};
+                const roundScore = roundScores[team] || 0;
+                const roundWinner = this.roundWinners[i-1];
+                
+                roundCell.textContent = roundScore;
+                if (roundWinner === team) {
+                    roundCell.className = 'round-winner';
+                }
+                
+                row.appendChild(roundCell);
+            }
+            
+            // Round wins cell
+            const winsCell = document.createElement('td');
+            winsCell.textContent = winCounts[team] || 0;
+            winsCell.className = 'wins-count';
+            row.appendChild(winsCell);
+            
+            // Total score cell
+            const totalCell = document.createElement('td');
+            totalCell.textContent = totalScores[team] || 0;
+            totalCell.className = 'total-score';
+            row.appendChild(totalCell);
+            
+            tbody.appendChild(row);
+        }
+        
+        table.appendChild(tbody);
+        
         // Assemble modal
         modalContent.appendChild(closeBtn);
         modalContent.appendChild(title);
