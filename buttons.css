@@ -1,0 +1,43 @@
+/* Styles for multiple counter buttons page */
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 500px;
+    margin-top: 20px;
+}
+
+.counter-button {
+    padding: 20px;
+    font-size: 24px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.counter-button:active {
+    opacity: 0.8;
+}
+
+.counter-value {
+    font-size: 18px;
+    margin-top: 8px;
+}
+
+#button1 {
+    background-color: #ea4335; /* Red */
+}
+
+#button2 {
+    background-color: #4285f4; /* Blue */
+}

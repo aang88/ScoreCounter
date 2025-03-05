@@ -1,0 +1,142 @@
+/* Game styles */
+
+/* Timer styles */
+.timer-container {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+}
+
+.timer-display {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-family: monospace;
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.timer-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4285f4;
+    color: white;
+    cursor: pointer;
+}
+
+.timer-button:hover {
+    background-color: #3367d6;
+}
+
+.timer-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Game controls */
+.game-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+.game-button {
+    padding: 10px 20px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.game-button:hover {
+    background-color: #3367d6;
+}
+
+.game-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#round-info {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Game announcements */
+.game-announcement {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-size: 24px;
+    transition: opacity 0.5s;
+    z-index: 1000;
+    opacity: 0;
+}
+
+/* Game summary */
+.game-summary {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.game-summary h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.game-summary h3 {
+    color: #4285f4;
+}
+
+.game-summary ul {
+    padding-left: 20px;
+}
+
+.game-summary button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 10px 20px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}

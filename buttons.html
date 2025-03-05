@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Counter Buttons</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="buttons.css">
+    <script src="counter.js"></script>
+    <script src="buttons.js"></script>
+</head>
+<body>
+    <h1>Counter Buttons</h1>
+    <div id="statusDiv" class="status">Connecting...</div>
+    
+    <div class="button-container">
+        <button id="button1" class="counter-button" disabled>
+            <span>Red Team</span>
+            <span id="value1" class="counter-value">0</span>
+        </button>
+        
+        <button id="button2" class="counter-button" disabled>
+            <span>Blue Team</span>
+            <span id="value2" class="counter-value">0</span>
+        </button>
+    </div>
+    
+    <div id="debug"></div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Score Counter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="display.css">
+    <link rel="stylesheet" href="game.css">
+    <script src="config.js"></script>
+    <script src="counter.js"></script>
+    <script src="timer.js"></script>
+    <script src="game-state.js"></script>
+    <script src="display-game.js"></script>
+</head>
+<body>
+    <h1>Score Counter</h1>
+    <div id="statusDiv" class="status">Connecting...</div>
+    
+    <div class="game-controls">
+        <button id="new-game-button" class="game-button">New Game</button>
+        <div id="round-info">Press New Game to start</div>
+    </div>
+    
+    <div class="timer-container">
+        <div id="timer-display" class="timer-display">00:00</div>
+        <div class="timer-controls">
+            <button id="start-pause-button" class="timer-button">Start</button>
+            <button id="reset-button" class="timer-button">Reset</button>
+        </div>
+    </div>
+    
+    <div class="counter-container" id="counterContainer">
+        <!-- Counter boxes will be added here dynamically -->
+    </div>
+    
+    <div id="debug"></div>
+</body>
+</html>
