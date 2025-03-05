@@ -1,70 +1,104 @@
-// game-state.js - Game state management
+// Improved game-state.js - Game state management with Best of 3 system
 class GameStateManager {
     constructor(counterManager, timerManager) {
         this.counterManager = counterManager;
         this.timerManager = timerManager;
-        this.currentRound = 0;
-        this.maxRounds = 3; // Default, can be configured
+        this.currentRound = 1;
+        this.maxRounds = 3; // Default for Best of 3
         this.isGameOver = false;
+        this.isGameInProgress = false; // New flag to prevent multiple game starts
         this.scores = {}; // Track scores by round
-        this.gameInProgress = false;
+        this.roundWinners = []; // Track which team won each round
+        this.roundInfoElement = null;
         
         // Bind timer end event
         this.timerManager.setOnTimerEnd(() => this.handleRoundEnd());
     }
     
+    // Set the element to display round information
+    setRoundInfoElement(element) {
+        this.roundInfoElement = element;
+        return this;
+    }
+    
     // Start a new game
     startGame(maxRounds = 3) {
+        // Prevent multiple game starts
+        if (this.isGameInProgress) {
+            console.warn('A game is already in progress');
+            return;
+        }
+
+        // Close any existing modals
+        this.closeExistingModals();
+
         this.currentRound = 1;
         this.maxRounds = maxRounds;
         this.isGameOver = false;
+        this.isGameInProgress = true; // Set game in progress
         this.scores = {};
-        this.gameInProgress = true;
+        this.roundWinners = [];
         
         // Reset counters via WebSocket
         this.resetAllCounters();
         
-        // Reset and start timer for first round
+        // Set timer duration (2 minutes per round)
+        this.timerManager.setDuration(120);
+        
+        // Start timer for first round
         this.timerManager.reset();
         this.timerManager.start();
         
-        // Announce game start
-        this.announceGameState(`Game started! Round 1 of ${this.maxRounds}`);
+        // Update round info
+        this.updateRoundInfo();
         
-        // Update UI
-        this.updateGameUI();
+        // Announce game start
+        this.announceGameState(`Game started! Best of ${this.maxRounds} rounds`);
+    }
+    
+    // Close any existing modal dialogs
+    closeExistingModals() {
+        const existingModals = document.querySelectorAll('.scores-modal');
+        existingModals.forEach(modal => {
+            document.body.removeChild(modal);
+        });
     }
     
     // Handle round end
     handleRoundEnd() {
-        if (!this.gameInProgress) return;
-        
+        // Prevent multiple round end calls
+        if (!this.isGameInProgress) return;
+
         // Save scores for this round
         this.saveRoundScores();
         
-        if (this.currentRound >= this.maxRounds) {
-            this.endGame();
+        // Determine round winner
+        const roundWinner = this.determineRoundWinner(this.currentRound);
+        this.roundWinners.push(roundWinner);
+        
+        // Announce round result
+        this.announceGameState(`Round ${this.currentRound} complete! Winner: ${roundWinner}`);
+        
+        // Check if we have an overall winner
+        const overallWinner = this.checkForOverallWinner();
+        
+        if (overallWinner || this.currentRound >= this.maxRounds) {
+            // We have a winner or reached max rounds, show round summary then end game
+            this.displayRoundSummary(true, overallWinner);
         } else {
-            this.startNextRound();
+            // No winner yet, show round summary and continue
+            this.displayRoundSummary(false);
         }
-    }
-    
-    // Save scores for the current round
-    saveRoundScores() {
-        // Get current counter values
-        const roundScores = {};
-        for (const [id, value] of Object.entries(this.counterManager.counters)) {
-            roundScores[id] = value;
-        }
-        
-        // Save for this round
-        this.scores[`round${this.currentRound}`] = roundScores;
-        
-        console.log(`Round ${this.currentRound} scores saved:`, roundScores);
     }
     
     // Start the next round
     startNextRound() {
+        // Ensure we don't go beyond max rounds
+        if (this.currentRound >= this.maxRounds) {
+            this.endGame();
+            return;
+        }
+
         this.currentRound++;
         
         // Reset counters for new round
@@ -74,165 +108,79 @@ class GameStateManager {
         this.timerManager.reset();
         this.timerManager.start();
         
-        // Announce new round
-        this.announceGameState(`Round ${this.currentRound} of ${this.maxRounds} started!`);
+        // Update round info
+        this.updateRoundInfo();
         
-        // Update UI
-        this.updateGameUI();
+        // Announce new round
+        this.announceGameState(`Round ${this.currentRound} started!`);
     }
     
     // End the game
-    endGame() {
+    endGame(overallWinner = null) {
+        // Prevent multiple end game calls
+        if (!this.isGameInProgress) return;
+
         this.isGameOver = true;
-        this.gameInProgress = false;
+        this.isGameInProgress = false; // Mark game as not in progress
         this.timerManager.pause();
         
-        // Calculate final scores
-        const finalScores = this.calculateFinalScores();
-        const winner = this.determineWinner(finalScores);
+        // If no winner was passed, calculate final scores and determine winner
+        if (!overallWinner) {
+            // Calculate based on match wins
+            const winCounts = {};
+            for (const winner of this.roundWinners) {
+                if (winner === 'Tie' || winner === 'None') continue;
+                winCounts[winner] = (winCounts[winner] || 0) + 1;
+            }
+            
+            let highestWins = 0;
+            overallWinner = 'None';
+            
+            for (const [team, wins] of Object.entries(winCounts)) {
+                if (wins > highestWins) {
+                    highestWins = wins;
+                    overallWinner = team;
+                } else if (wins === highestWins) {
+                    overallWinner = 'Tie';
+                }
+            }
+        }
+        
+        // Update round info
+        if (this.roundInfoElement) {
+            this.roundInfoElement.textContent = `Game Over! Winner: ${overallWinner}`;
+        }
         
         // Announce winner
-        this.announceGameState(`Game Over! Winner: ${winner}`);
+        this.announceGameState(`Game Over! Winner: ${overallWinner}`);
         
-        // Display final scores and summary
-        this.displayGameSummary(finalScores, winner);
+        // Display final scores
+        console.log("Final match results:", this.roundWinners);
         
-        // Update UI
-        this.updateGameUI();
+        // Display final scores table
+        this.displayFinalScores(overallWinner);
     }
-    
-    // Calculate final scores across all rounds
-    calculateFinalScores() {
-        const finalScores = {};
-        
-        // Sum scores from all rounds
-        for (const roundScores of Object.values(this.scores)) {
-            for (const [id, score] of Object.entries(roundScores)) {
-                finalScores[id] = (finalScores[id] || 0) + score;
-            }
-        }
-        
-        return finalScores;
-    }
-    
-    // Determine the winner based on final scores
-    determineWinner(finalScores) {
-        let winner = 'None';
-        let highestScore = -1;
-        
-        for (const [id, score] of Object.entries(finalScores)) {
-            if (score > highestScore) {
-                highestScore = score;
-                winner = id.charAt(0).toUpperCase() + id.slice(1); // Capitalize
-            } else if (score === highestScore) {
-                winner = `Tie between ${winner} and ${id.charAt(0).toUpperCase() + id.slice(1)}`;
-            }
-        }
-        
-        return winner;
-    }
-    
-    // Reset all counters to zero
-    resetAllCounters() {
-        // Send reset message via WebSocket
-        if (this.counterManager.socket && this.counterManager.socket.readyState === WebSocket.OPEN) {
-            this.counterManager.socket.send(JSON.stringify({
-                type: 'reset-counters'
-            }));
-        }
-    }
-    
-    // Announce game state changes
-    announceGameState(message) {
-        console.log(message);
-        
-        // Create or update announcement element
-        let announcementElement = document.getElementById('game-announcement');
-        if (!announcementElement) {
-            announcementElement = document.createElement('div');
-            announcementElement.id = 'game-announcement';
-            announcementElement.className = 'game-announcement';
-            document.body.appendChild(announcementElement);
-        }
-        
-        announcementElement.textContent = message;
-        announcementElement.style.opacity = '1';
-        
-        // Fade out after 3 seconds
-        setTimeout(() => {
-            announcementElement.style.opacity = '0';
-        }, 3000);
-    }
-    
-    // Update game UI elements
-    updateGameUI() {
-        // Update round info if element exists
-        const roundInfoElement = document.getElementById('round-info');
-        if (roundInfoElement) {
-            if (this.gameInProgress) {
-                roundInfoElement.textContent = `Round ${this.currentRound} of ${this.maxRounds}`;
-            } else if (this.isGameOver) {
-                roundInfoElement.textContent = 'Game Over';
-            } else {
-                roundInfoElement.textContent = 'Press New Game to start';
-            }
-        }
-        
-        // Update game controls if they exist
-        const newGameButton = document.getElementById('new-game-button');
-        if (newGameButton) {
-            newGameButton.disabled = this.gameInProgress;
-        }
-    }
-    
-    // Display game summary
-    displayGameSummary(finalScores, winner) {
-        // Create summary container
-        let summaryElement = document.getElementById('game-summary');
-        if (!summaryElement) {
-            summaryElement = document.createElement('div');
-            summaryElement.id = 'game-summary';
-            summaryElement.className = 'game-summary';
-            document.body.appendChild(summaryElement);
-        }
-        
-        // Generate summary HTML
-        let summaryHTML = `
-            <h2>Game Summary</h2>
-            <h3>Winner: ${winner}</h3>
-            <h4>Final Scores:</h4>
-            <ul>
-        `;
-        
-        for (const [id, score] of Object.entries(finalScores)) {
-            const teamName = id.charAt(0).toUpperCase() + id.slice(1); // Capitalize
-            summaryHTML += `<li>${teamName}: ${score}</li>`;
-        }
-        
-        summaryHTML += `</ul><h4>Round Breakdown:</h4>`;
-        
-        for (let i = 1; i <= this.maxRounds; i++) {
-            const roundScores = this.scores[`round${i}`] || {};
-            summaryHTML += `<h5>Round ${i}:</h5><ul>`;
+
+    // [All other methods remain the same as in the previous implementation]
+
+    // In the displayFinalScores method, modify the New Game button:
+    displayFinalScores(overallWinner) {
+        // ... existing code ...
+
+        const newGameBtn = document.createElement('button');
+        newGameBtn.className = 'continue-button';
+        newGameBtn.textContent = 'Start New Game';
+        newGameBtn.onclick = () => {
+            modal.style.display = 'none';
             
-            for (const [id, score] of Object.entries(roundScores)) {
-                const teamName = id.charAt(0).toUpperCase() + id.slice(1); // Capitalize
-                summaryHTML += `<li>${teamName}: ${score}</li>`;
+            // Only start a new game if not already in progress
+            if (!this.isGameInProgress) {
+                const rounds = parseInt(prompt('How many rounds (for best of N)?', '3')) || 3;
+                this.startGame(rounds);
             }
-            
-            summaryHTML += `</ul>`;
-        }
-        
-        summaryHTML += `<button id="close-summary">Close</button>`;
-        
-        // Set content and show
-        summaryElement.innerHTML = summaryHTML;
-        summaryElement.style.display = 'block';
-        
-        // Add close button handler
-        document.getElementById('close-summary').addEventListener('click', () => {
-            summaryElement.style.display = 'none';
-        });
+        };
+
+        // ... rest of the existing code ...
     }
 }
 

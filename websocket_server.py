@@ -32,6 +32,22 @@ async def counter_server(websocket):
         async for message in websocket:
             print(f"Received message from {client_info}: {message}")
             data = json.loads(message)
+
+            if data['type'] == 'subtract-counter':
+                counter_id = data['id']
+                value = data.get('value', 1)
+                
+                # Prevent negative values
+                current_value = counters.get(counter_id, 0)
+                new_value = max(0, current_value - value)
+                
+                counters[counter_id] = new_value
+                
+                # Broadcast updated counter values to all clients
+                await broadcast({
+                    "type": "counters",
+                    "values": counters
+                })
             
             if data.get("type") == "increment":
                 counter_id = data.get("counterId")

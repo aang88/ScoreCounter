@@ -1,4 +1,41 @@
-/* Game styles */
+/* Styles for game components with Best of 3 enhancements */
+
+/* Game controls */
+.game-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+.game-button {
+    padding: 10px 20px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.game-button:hover {
+    background-color: #3367d6;
+}
+
+.game-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.round-info {
+    font-size: 18px;
+    font-weight: bold;
+}
 
 /* Timer styles */
 .timer-container {
@@ -43,43 +80,6 @@
     cursor: not-allowed;
 }
 
-/* Game controls */
-.game-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-}
-
-.game-button {
-    padding: 10px 20px;
-    background-color: #4285f4;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.game-button:hover {
-    background-color: #3367d6;
-}
-
-.game-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-#round-info {
-    font-size: 18px;
-    font-weight: bold;
-}
-
 /* Game announcements */
 .game-announcement {
     position: fixed;
@@ -96,47 +96,166 @@
     opacity: 0;
 }
 
-/* Game summary */
-.game-summary {
+/* Scores modal */
+.scores-modal {
+    display: none;
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.scores-modal-content {
     background-color: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    margin: 10% auto;
     padding: 20px;
     border-radius: 10px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 1000;
-    display: none;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
 }
 
-.game-summary h2 {
-    margin-top: 0;
-    color: #333;
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.scores-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.scores-table th, .scores-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.scores-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.scores-table .winner {
+    background-color: #d4edda;
+    font-weight: bold;
+}
+
+.scores-table .round-winner {
+    background-color: #e7f5ff;
+    font-weight: bold;
+}
+
+.scores-table .total-score {
+    font-weight: bold;
+    background-color: #f8f9fa;
+}
+
+.scores-table .wins-count {
+    font-weight: bold;
+    background-color: #fff4e5;
+}
+
+/* Round summary and end-of-round styling */
+.round-scores {
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.score-item {
+    padding: 8px 0;
+    font-size: 18px;
     border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
 }
 
-.game-summary h3 {
-    color: #4285f4;
+.score-item:last-child {
+    border-bottom: none;
 }
 
-.game-summary ul {
-    padding-left: 20px;
+.score-item.winner {
+    background-color: #d4edda;
+    padding: 8px;
+    border-radius: 5px;
 }
 
-.game-summary button {
+.team-name {
+    font-weight: bold;
+}
+
+.team-score {
+    float: right;
+    font-weight: bold;
+}
+
+.continue-button {
     display: block;
-    margin: 20px auto 0;
-    padding: 10px 20px;
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
     background-color: #4285f4;
     color: white;
     border: none;
     border-radius: 5px;
+    font-size: 16px;
     cursor: pointer;
+    text-align: center;
+}
+
+.continue-button:hover {
+    background-color: #3367d6;
+}
+
+/* Best of 3 specific styles */
+.winner-announcement {
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #d4edda;
+    border-radius: 5px;
+    color: #155724;
+}
+
+.final-winner-announcement {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #ffd700;
+    border-radius: 5px;
+    color: #856404;
+}
+
+.match-standings {
+    font-size: 16px;
+    text-align: center;
+    margin: 10px 0;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Time warning styles */
+.timer-warning {
+    color: #ff5722;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }

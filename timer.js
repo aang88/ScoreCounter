@@ -1,11 +1,10 @@
-// timer.js - Timer module for the counter application
-
+// timer.js - Timer module with countdown functionality
 class TimerManager {
     constructor(websocket) {
         this.websocket = websocket;
         this.isRunning = false;
         this.startTime = 0;
-        this.pausedTime = 0;
+        this.pausedTimeRemaining = 0;
         this.timerElement = null;
         this.intervalId = null;
         this.onTimerUpdate = null;
@@ -16,12 +15,18 @@ class TimerManager {
     // Set the timer duration in seconds
     setDuration(seconds) {
         this.duration = seconds;
+        // Update display initially to show full time
+        this.updateTimerDisplay(this.duration * 1000);
         return this;
     }
 
     // Set the HTML element where the timer will be displayed
     setTimerElement(element) {
         this.timerElement = element;
+        // Update display initially
+        if (this.timerElement) {
+            this.updateTimerDisplay(this.pausedTimeRemaining || this.duration * 1000);
+        }
         return this;
     }
 
@@ -43,11 +48,12 @@ class TimerManager {
         
         this.isRunning = true;
         
-        // If we were paused, resume from that time
-        if (this.pausedTime > 0) {
-            this.startTime = Date.now() - this.pausedTime;
+        // If we were paused, resume from saved remaining time
+        if (this.pausedTimeRemaining > 0) {
+            this.startTime = Date.now() - (this.duration * 1000 - this.pausedTimeRemaining);
         } else {
             this.startTime = Date.now();
+            this.pausedTimeRemaining = 0;
         }
         
         this.intervalId = setInterval(() => this.updateTimer(), 100);
@@ -56,7 +62,8 @@ class TimerManager {
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
             this.websocket.send(JSON.stringify({
                 type: 'timer-start',
-                startTime: this.startTime
+                startTime: this.startTime,
+                duration: this.duration
             }));
         }
         
@@ -68,14 +75,18 @@ class TimerManager {
         if (!this.isRunning) return;
         
         this.isRunning = false;
-        this.pausedTime = Date.now() - this.startTime;
+        
+        // Calculate remaining time
+        const elapsed = Date.now() - this.startTime;
+        this.pausedTimeRemaining = Math.max(0, this.duration * 1000 - elapsed);
+        
         clearInterval(this.intervalId);
         
         // Notify server if websocket is available
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
             this.websocket.send(JSON.stringify({
                 type: 'timer-pause',
-                pausedTime: this.pausedTime
+                pausedTimeRemaining: this.pausedTimeRemaining
             }));
         }
         
@@ -86,9 +97,11 @@ class TimerManager {
     reset() {
         this.isRunning = false;
         this.startTime = 0;
-        this.pausedTime = 0;
+        this.pausedTimeRemaining = 0;
         clearInterval(this.intervalId);
-        this.updateTimerDisplay(0);
+        
+        // Show full duration
+        this.updateTimerDisplay(this.duration * 1000);
         
         // Notify server if websocket is available
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
@@ -114,27 +127,29 @@ class TimerManager {
     updateTimer() {
         if (!this.isRunning) return;
         
-        const elapsedTime = Date.now() - this.startTime;
-        this.updateTimerDisplay(elapsedTime);
+        const elapsed = Date.now() - this.startTime;
+        const remaining = Math.max(0, this.duration * 1000 - elapsed);
         
-        // Check if timer has reached its duration
-        if (Math.floor(elapsedTime / 1000) >= this.duration) {
+        this.updateTimerDisplay(remaining);
+        
+        if (this.onTimerUpdate) {
+            this.onTimerUpdate(remaining);
+        }
+        
+        // Check if timer has reached zero
+        if (remaining <= 0) {
             this.pause();
             if (this.onTimerEnd) {
                 this.onTimerEnd();
             }
         }
-        
-        if (this.onTimerUpdate) {
-            this.onTimerUpdate(elapsedTime);
-        }
     }
     
     // Update the timer display
-    updateTimerDisplay(timeInMs) {
+    updateTimerDisplay(timeRemainingInMs) {
         if (!this.timerElement) return;
         
-        const seconds = Math.floor(timeInMs / 1000);
+        const seconds = Math.ceil(timeRemainingInMs / 1000);
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         
@@ -147,14 +162,15 @@ class TimerManager {
         if (data.type === 'timer-start') {
             this.isRunning = true;
             this.startTime = data.startTime;
+            this.duration = data.duration || this.duration;
             clearInterval(this.intervalId);
             this.intervalId = setInterval(() => this.updateTimer(), 100);
         }
         else if (data.type === 'timer-pause') {
             this.isRunning = false;
-            this.pausedTime = data.pausedTime;
+            this.pausedTimeRemaining = data.pausedTimeRemaining;
             clearInterval(this.intervalId);
-            this.updateTimerDisplay(this.pausedTime);
+            this.updateTimerDisplay(this.pausedTimeRemaining);
         }
         else if (data.type === 'timer-reset') {
             this.reset();
@@ -162,15 +178,16 @@ class TimerManager {
         else if (data.type === 'timer-sync') {
             // For full sync of timer state
             this.isRunning = data.isRunning;
+            this.duration = data.duration || this.duration;
             
             if (this.isRunning) {
                 this.startTime = data.startTime;
                 clearInterval(this.intervalId);
                 this.intervalId = setInterval(() => this.updateTimer(), 100);
             } else {
-                this.pausedTime = data.pausedTime;
+                this.pausedTimeRemaining = data.pausedTimeRemaining || (this.duration * 1000);
                 clearInterval(this.intervalId);
-                this.updateTimerDisplay(this.pausedTime);
+                this.updateTimerDisplay(this.pausedTimeRemaining);
             }
         }
     }
