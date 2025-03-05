@@ -28,10 +28,10 @@ class GameStateManager {
             console.warn('A game is already in progress');
             return;
         }
-
+    
         // Close any existing modals
         this.closeExistingModals();
-
+    
         this.currentRound = 1;
         this.maxRounds = maxRounds;
         this.isGameOver = false;
@@ -42,11 +42,13 @@ class GameStateManager {
         // Reset counters via WebSocket
         this.resetAllCounters();
         
+        // Reset timer
+        this.timerManager.reset();
+        
         // Set timer duration (2 minutes per round)
         this.timerManager.setDuration(120);
         
         // Start timer for first round
-        this.timerManager.reset();
         this.timerManager.start();
         
         // Update round info
@@ -114,6 +116,15 @@ class GameStateManager {
         // Announce new round
         this.announceGameState(`Round ${this.currentRound} started!`);
     }
+
+    resetAllCounters() {
+        // Send reset message via WebSocket
+        if (this.counterManager.socket && this.counterManager.socket.readyState === WebSocket.OPEN) {
+            this.counterManager.socket.send(JSON.stringify({
+                type: 'reset-counters'
+            }));
+        }
+    }
     
     // End the game
     endGame(overallWinner = null) {
@@ -165,22 +176,66 @@ class GameStateManager {
 
     // In the displayFinalScores method, modify the New Game button:
     displayFinalScores(overallWinner) {
-        // ... existing code ...
-
+        const totalScores = this.calculateTotalScores();
+        
+        // Create modal for final scores
+        const modal = document.createElement('div');
+        modal.className = 'scores-modal';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'scores-modal-content';
+        
+        const title = document.createElement('h2');
+        title.textContent = 'Final Results';
+        
+        const winnerAnnouncement = document.createElement('div');
+        winnerAnnouncement.className = 'final-winner-announcement';
+        winnerAnnouncement.textContent = `Match Winner: ${overallWinner}`;
+        
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-button';
+        closeBtn.textContent = '×';
+        closeBtn.onclick = () => modal.style.display = 'none';
+        
         const newGameBtn = document.createElement('button');
         newGameBtn.className = 'continue-button';
         newGameBtn.textContent = 'Start New Game';
         newGameBtn.onclick = () => {
+            // Close the modal
             modal.style.display = 'none';
+            document.body.removeChild(modal);
             
-            // Only start a new game if not already in progress
+            // Ensure we're not already in a game
             if (!this.isGameInProgress) {
+                // Prompt for rounds
                 const rounds = parseInt(prompt('How many rounds (for best of N)?', '3')) || 3;
+                
+                // Reset everything before starting a new game
+                this.currentRound = 1;
+                this.maxRounds = rounds;
+                this.isGameOver = false;
+                this.scores = {};
+                this.roundWinners = [];
+                
+                // Start the new game
                 this.startGame(rounds);
             }
         };
-
-        // ... rest of the existing code ...
+        
+        // Rest of the existing method remains the same...
+        // (table creation code, etc.)
+    
+        // Assemble modal
+        modalContent.appendChild(closeBtn);
+        modalContent.appendChild(title);
+        modalContent.appendChild(winnerAnnouncement);
+        modalContent.appendChild(table);
+        modalContent.appendChild(newGameBtn);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Show modal
+        modal.style.display = 'block';
     }
 }
 
