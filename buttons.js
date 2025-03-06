@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the counter manager
-    const counterManager = new CounterManager('ws://192.168.0.27:8765');
+    const counterManager = new CounterManager('ws://172.20.10.3:8765');
     
     // Get references to DOM elements
     const addButton1 = document.getElementById('button1');
