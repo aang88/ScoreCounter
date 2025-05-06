@@ -58,8 +58,17 @@ class TimerManager {
         if (this.isRunning) return;
     
         this.isRunning = true;
-        this.startTime = Date.now();
+        if (this.pausedTimeRemaining) {
+            console.log("Resuming timer from paused state");
+            this.startTime = Date.now() - (this.duration * 1000 - this.pausedTimeRemaining);
+            this.pausedTimeRemaining = null; // Clear paused time
+        } else {
+            // Start fresh if not resuming
+            this.startTime = Date.now();
+        }
         this.intervalId = setInterval(() => this.updateTimer(), 100);
+
+        
     
         // Wait for WebSocket to be ready
         if (this.websocket) {
