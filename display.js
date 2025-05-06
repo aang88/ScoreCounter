@@ -173,7 +173,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize the counter manager
     const counterManager = new CounterManager('ws://192.168.2.61:8765');
-    
+    console.log("CounterManager WebSocket:", counterManager.socket);
+    counterManager.connect();
+
     // Set up debug logging
     counterManager.setDebugElement(debug);
     
@@ -220,6 +222,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize timer manager
     const timerManager = new TimerManager(counterManager.socket);
+
+    console.log("TimerManager initialized with WebSocket:", timerManager.websocket);
     const timerDisplay = document.getElementById('timerDisplay');
     timerManager.setTimerElement(timerDisplay);
     timerManager.setDuration(10); // 2 minutes
@@ -232,14 +236,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up timer button events
     const startPauseButton = document.getElementById('startPauseButton');
     const resetButton = document.getElementById('resetButton');
-    
+    console.log("here");
     if (startPauseButton) {
+        // printf("Setting up start/pause button event listener");
         startPauseButton.addEventListener('click', () => {
             if (timerManager.isRunning) {
+                console.log("Pausing timer");
                 timerManager.pause();
                 startPauseButton.textContent = 'Start';
             } else {
                 timerManager.start();
+                console.log("Starting timer");
                 startPauseButton.textContent = 'Pause';
             }
         });

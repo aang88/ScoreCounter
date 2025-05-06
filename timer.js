@@ -54,31 +54,39 @@ class TimerManager {
 
     // Start the timer
     start() {
+        console.log("Starting timer with duration:", this.duration);
         if (this.isRunning) return;
-        
+    
         this.isRunning = true;
-        
-        // If we were paused, resume from saved remaining time
-        if (this.pausedTimeRemaining > 0) {
-            this.startTime = Date.now() - (this.duration * 1000 - this.pausedTimeRemaining);
-        } else {
-            this.startTime = Date.now();
-            this.pausedTimeRemaining = 0;
-        }
-        
+        this.startTime = Date.now();
         this.intervalId = setInterval(() => this.updateTimer(), 100);
-        
-        // Notify server if websocket is available
-        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-            this.websocket.send(JSON.stringify({
-                type: 'timer-start',
-                startTime: this.startTime,
-                duration: this.duration,
-                pausedTimeRemaining: this.pausedTimeRemaining // Include for better sync
-            }));
+    
+        // Wait for WebSocket to be ready
+        if (this.websocket) {
+            if (this.websocket.readyState === WebSocket.OPEN) {
+                this.sendTimerStartMessage();
+            } else {
+                console.warn("WebSocket not ready. Retrying...");
+                const retryInterval = setInterval(() => {
+                    if (this.websocket.readyState === WebSocket.OPEN) {
+                        clearInterval(retryInterval);
+                        this.sendTimerStartMessage();
+                    }
+                }, 100); // Retry every 100ms
+            }
+        } else {
+            console.error("WebSocket is not initialized!");
         }
-        
-        return this;
+    }
+    
+    sendTimerStartMessage() {
+        console.log("Sending timer start message to server");
+        this.websocket.send(JSON.stringify({
+            type: 'timer-start',
+            startTime: this.startTime,
+            duration: this.duration,
+            pausedTimeRemaining: this.pausedTimeRemaining
+        }));
     }
     
     // Pause the timer
