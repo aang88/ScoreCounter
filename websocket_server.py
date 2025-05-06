@@ -55,6 +55,7 @@ async def counter_server(websocket):
             
             if data.get("type") == "increment":
                 counter_id = data.get("counterId")
+                value = data.get("value", 1)
                 
                 # Check if we have a valid counter ID
                 if not counter_id:
@@ -66,7 +67,7 @@ async def counter_server(websocket):
                     counters[counter_id] = 0
                 
                 # Increment the counter
-                counters[counter_id] += 1
+                counters[counter_id] += value
                 print(f"Incremented {counter_id} to {counters[counter_id]}")
                 print(f"All counters now: {counters}")
                 

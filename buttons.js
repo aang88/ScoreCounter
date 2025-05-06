@@ -4,8 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Get references to DOM elements
     const addButton1 = document.getElementById('button1');
+    const addButton1Body = document.getElementById('button1body');
+    const addButton1Spin = document.getElementById('button1spin');
     const subtractButton1 = document.getElementById('subtractButton1');
     const addButton2 = document.getElementById('button2');
+    const addButton2Body = document.getElementById('button2body');
+    const addButton2Spin = document.getElementById('button2spin');
     const subtractButton2 = document.getElementById('subtractButton2');
     const value1 = document.getElementById('value1');
     const value2 = document.getElementById('value2');
@@ -74,6 +78,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     counterManager.incrementCounter('red');
                 });
             }
+
+            if (addButton1Body) {
+                console.log("Setting up event listener for addButton1Body");
+                addButton1Body.addEventListener('click', () => {
+                    console.log("addButton1Body clicked");
+                    counterManager.incrementCounter('red', 2); // Increment by 1
+                });
+            }
+
+            if (addButton1Spin) {
+                console.log("Setting up event listener for addButton1Spin");
+                addButton1Spin.addEventListener('click', () => {
+                    console.log("addButton1Spin clicked");
+                    counterManager.incrementCounter('red', 4); // Increment by 1
+                });
+            }
     
             if (subtractButton1) {
                 console.log("Setting up event listener for subtractButton1");
@@ -90,6 +110,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     counterManager.incrementCounter('blue');
                 });
             }
+
+            if (addButton2Body) {
+                console.log("Setting up event listener for addButton2Body");
+                addButton2Body.addEventListener('click', () => {
+                    console.log("addButton2Body clicked");
+                    counterManager.incrementCounter('blue', 2); // Increment by 1
+                });
+            }
+
+            if (addButton2Spin) {
+                console.log("Setting up event listener for addButton2Spin");
+                addButton2Spin.addEventListener('click', () => {
+                    console.log("addButton2Spin clicked");
+                    counterManager.incrementCounter('blue', 4); // Increment by 1
+                });
+            }
     
             if (subtractButton2) {
                 console.log("Setting up event listener for subtractButton2");
@@ -104,8 +140,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
             // Disable all buttons when disconnected
             if (addButton1) addButton1.disabled = true;
+            if (addButton1Body) addButton1Body.disabled = true;
+            if (addButton1Spin) addButton1Spin.disabled = true;
             if (subtractButton1) subtractButton1.disabled = true;
             if (addButton2) addButton2.disabled = true;
+            if (addButton2Body) addButton2Body.disabled = true;
+            if (addButton2Spin) addButton2Spin.disabled = true;
             if (subtractButton2) subtractButton2.disabled = true;
             if (startTimerBtn) startTimerBtn.disabled = true;
             if (pauseTimerBtn) pauseTimerBtn.disabled = true;

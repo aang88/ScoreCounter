@@ -101,7 +101,7 @@ class CounterManager {
     }
     
     // Increment a counter
-    incrementCounter(counterId) {
+    incrementCounter(counterId,value) {
         if (!this.connected) {
             this.log(`Cannot increment ${counterId} - not connected`);
             return;
@@ -111,6 +111,7 @@ class CounterManager {
         this.socket.send(JSON.stringify({
             type: 'increment',
             counterId: counterId,
+            value: value || 1
         }));
     }
 
