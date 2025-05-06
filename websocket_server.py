@@ -14,6 +14,7 @@ timer_state = {
 }
 
 async def counter_server(websocket):
+    global timer_state
     client_info = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
     print(f"New client connected: {client_info}")
     
@@ -84,29 +85,65 @@ async def counter_server(websocket):
                 })
                 
             elif data.get("type") == "timer-start":
-                # Update timer state
-                global_timer_update({
+                # First declare global, then use the variable
+                
+                # Store the duration in a local variable
+                duration = timer_state.get("duration", 60)
+                
+                # Now update
+                timer_state = {
                     "type": "timer-start",
-                    "startTime": data.get("startTime")
-                })
+                    "isRunning": True,
+                    "startTime": data.get("startTime", int(time.time() * 1000)),
+                    "pausedTime": 0,
+                    "pausedTimeRemaining": 0,
+                    "duration": duration  # Use the saved value
+                }
+                
                 # Broadcast to all clients
                 await broadcast(timer_state)
-                
+                            
             elif data.get("type") == "timer-pause":
-                # Update timer state
+                # Get a valid pausedTime value
+                pausedTime = data.get("pausedTime")
+                pausedTimeRemaining = data.get("pausedTimeRemaining")
+                
+                # Make sure we have at least one valid value
+                if pausedTime is None and pausedTimeRemaining is not None:
+                    pausedTime = pausedTimeRemaining
+                elif pausedTime is None and pausedTimeRemaining is None:
+                    # Calculate from startTime if possible
+                    if "startTime" in timer_state and timer_state["startTime"] > 0:
+                        elapsed = int(time.time() * 1000) - timer_state["startTime"]
+                        pausedTime = max(0, (timer_state.get("duration", 60) * 1000) - elapsed)
+                    else:
+                        # Fallback to full duration
+                        pausedTime = timer_state.get("duration", 60) * 1000
+                
+                # Update timer state with valid pausedTime
                 global_timer_update({
                     "type": "timer-pause",
-                    "pausedTime": data.get("pausedTime")
+                    "pausedTime": pausedTime,
+                    "pausedTimeRemaining": pausedTime  # Make them consistent
                 })
                 # Broadcast to all clients
                 await broadcast(timer_state)
                 
             elif data.get("type") == "timer-reset":
-                # Update timer state
-                global_timer_update({
-                    "type": "timer-reset"
-                })
-                # Broadcast to all clients
+                # Store the duration before resetting
+                duration = timer_state.get("duration", 60)
+                
+                # ONLY SEND ONE MESSAGE - Use timer-reset type with pause state properties
+                timer_state = {
+                    "type": "timer-reset",  # Keep as timer-reset
+                    "isRunning": False,
+                    "startTime": 0,
+                    "pausedTime": duration * 1000,
+                    "pausedTimeRemaining": duration * 1000,
+                    "duration": duration
+                }
+                
+                # Broadcast just once
                 await broadcast(timer_state)
                 
             elif data.get("type") == "timer-sync-request":
@@ -122,20 +159,68 @@ async def counter_server(websocket):
         connected_clients.remove(websocket)
         print(f"Client disconnected: {client_info}")
 
-# Helper function to update the global timer state
+# In your global_timer_update function
 def global_timer_update(new_state):
     global timer_state
-    timer_state = new_state
+    
+    # Special handling for timer-pause
+    if new_state.get('type') == 'timer-pause':
+        # Make sure we have valid pausedTime/pausedTimeRemaining
+        if 'pausedTime' in new_state and new_state['pausedTime'] is None:
+            # Convert None to a numeric value (use client-provided value if available)
+            new_state['pausedTime'] = new_state.get('pausedTimeRemaining', 0)
+        
+        # Ensure isRunning is set to false
+        new_state['isRunning'] = False
+    
+    # Special handling for timer-reset
+    elif new_state.get('type') == 'timer-reset':
+        # Start fresh with only essential properties
+        reset_data = {
+            "type": "timer-reset",
+            "isRunning": False,
+            "startTime": 0,
+            "pausedTime": 0,
+            "pausedTimeRemaining": 0,
+            "duration": new_state.get('duration', 60)
+        }
+        timer_state.clear()  # Clear existing contents
+        timer_state.update(reset_data)  # Add new contents
+        return  # Skip the normal update
+    
+    # Normal property update
+    updated_state = timer_state.copy()
+    updated_state.update(new_state)
+    timer_state = updated_state
+    
+    # Ensure we have valid type
+    if 'type' not in timer_state:
+        timer_state['type'] = 'timer-sync'
 
 async def broadcast(message):
     if connected_clients:
-        # Convert message to JSON
-        message_str = json.dumps(message)
-        # Send to all connected clients
-        await asyncio.gather(
-            *[client.send(message_str) for client in connected_clients]
-        )
-        print(f"Broadcast message to {len(connected_clients)} clients: {message}")
+        # Convert message to JSON string if it's a dict
+        if isinstance(message, dict):
+            message_str = json.dumps(message)
+        else:
+            message_str = message
+            
+        # Log the broadcast
+        client_count = len(connected_clients)
+        msg_type = message.get("type", "unknown") if isinstance(message, dict) else "raw"
+        print(f"Broadcasting {msg_type} message to {client_count} clients")
+        
+        # Send to all clients
+        websockets_to_remove = set()
+        for websocket in connected_clients:
+            try:
+                await websocket.send(message_str if isinstance(message_str, str) else json.dumps(message_str))
+            except websockets.exceptions.ConnectionClosed:
+                websockets_to_remove.add(websocket)
+        
+        # Clean up any closed connections
+        for websocket in websockets_to_remove:
+            connected_clients.remove(websocket)
 
 # Start server
 async def main():

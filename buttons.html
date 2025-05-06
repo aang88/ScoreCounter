@@ -5,11 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="buttons.css">
+    <link rel="stylesheet" href="timer-styles.css">
     <script src="counter.js"></script>
+    <script src="timer.js"></script>
     <script src="buttons.js"></script>
 </head>
 <body>
     <h1>Controls</h1>
+    <div id="statusDiv" class="connection-status">Disconnected</div>
+    
     <div class="button-container">
         <div class="team-controls">
             <button id="button1" class="counter-button">+1 Red</button>
@@ -20,6 +24,16 @@
             <button id="button2" class="counter-button">+1 Blue</button>
             <button id="subtractButton2" class="counter-button">-1 Blue</button>
             <div id="value2" class="counter-value">0</div>
+        </div>
+    </div>
+    
+    <!-- Add Timer Controls -->
+    <div id="timerContainer" class="timer-container">
+        <div id="timerDisplay" class="timer-display">01:00</div>
+        <div class="timer-controls">
+            <button id="startTimerBtn" class="timer-button">Start</button>
+            <button id="pauseTimerBtn" class="timer-button">Pause</button>
+            <button id="resetTimerBtn" class="timer-button">Reset</button>
         </div>
     </div>
     
