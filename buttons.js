@@ -34,15 +34,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (connected) {
             statusDiv.textContent = 'Connected';
             statusDiv.style.color = 'green';
-            
+    
             // Update timer manager with connected socket
             timerManager.websocket = counterManager.socket;
-            
+    
             // Immediately request current timer state
             counterManager.socket.send(JSON.stringify({
                 type: 'timer-sync-request'
             }));
-            
+    
             // Set up timer button events - these are local UI events
             if (startTimerBtn) {
                 startTimerBtn.addEventListener('click', () => {
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateButtonStates(true);
                 });
             }
-            
+    
             if (pauseTimerBtn) {
                 pauseTimerBtn.addEventListener('click', () => {
                     timerManager.pause();
@@ -58,23 +58,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 pauseTimerBtn.disabled = true; // Initially disabled
             }
-            
+    
             if (resetTimerBtn) {
                 resetTimerBtn.addEventListener('click', () => {
                     timerManager.reset();
                     updateButtonStates(false);
                 });
             }
-            
+    
             // Enable counter buttons
-            if (addButton1) addButton1.disabled = false;
-            if (subtractButton1) subtractButton1.disabled = false;
-            if (addButton2) addButton2.disabled = false;
-            if (subtractButton2) subtractButton2.disabled = false;
+            if (addButton1) {
+                console.log("Setting up event listener for addButton1");
+                addButton1.addEventListener('click', () => {
+                    console.log("addButton1 clicked");
+                    counterManager.incrementCounter('red');
+                });
+            }
+    
+            if (subtractButton1) {
+                console.log("Setting up event listener for subtractButton1");
+                subtractButton1.addEventListener('click', () => {
+                    console.log("subtractButton1 clicked");
+                    counterManager.decrementCounter('red', -1); // Decrement by 1
+                });
+            }
+    
+            if (addButton2) {
+                console.log("Setting up event listener for addButton2");
+                addButton2.addEventListener('click', () => {
+                    console.log("addButton2 clicked");
+                    counterManager.incrementCounter('blue');
+                });
+            }
+    
+            if (subtractButton2) {
+                console.log("Setting up event listener for subtractButton2");
+                subtractButton2.addEventListener('click', () => {
+                    console.log("subtractButton2 clicked");
+                    counterManager.decrementCounter('blue', -1); // Decrement by 1
+                });
+            }
         } else {
             statusDiv.textContent = 'Disconnected';
             statusDiv.style.color = 'red';
-            
+    
             // Disable all buttons when disconnected
             if (addButton1) addButton1.disabled = true;
             if (subtractButton1) subtractButton1.disabled = true;
@@ -86,8 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // THIS IS THE KEY FIX - Replace the WebSocket message handler
-    // We're replacing the whole connect method to ensure we handle all messages properly
+  
     counterManager.connect = function() {
         console.log('Creating WebSocket connection to:', this.serverUrl);
         
@@ -135,7 +161,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.onCounterUpdate(this.counters);
                     }
                 }
+
                 
+               
                 // Then handle timer updates - THIS IS THE KEY PART FOR TIMER SYNC
                 if (data.type && data.type.startsWith('timer-')) {
                     console.log("TIMER EVENT FROM SERVER:", data.type);

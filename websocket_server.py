@@ -35,7 +35,10 @@ async def counter_server(websocket):
             data = json.loads(message)
 
             if data['type'] == 'subtract-counter':
-                counter_id = data['id']
+                counter_id = data.get('counterId')
+                if not counter_id:
+                    print("Warning: Received subtract-counter without counter ID")
+                    return
                 value = data.get('value', 1)
                 
                 # Prevent negative values

@@ -113,6 +113,19 @@ class CounterManager {
             counterId: counterId,
         }));
     }
+
+    decrementCounter(counterId) {
+        if (!this.connected) {
+            this.log(`Cannot decrement ${counterId} - not connected`);
+            return;
+        }
+        
+        this.log(`Decrementing counter: ${counterId}`);
+        this.socket.send(JSON.stringify({
+            type: 'subtract-counter',
+            counterId: counterId,
+        }));
+    }
     
     // Get current value of a counter
     getCounterValue(counterId) {
