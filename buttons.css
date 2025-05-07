@@ -52,10 +52,13 @@
     margin-top: 8px;
 }
 
-#button1 {
+#button1.counter-button, #button1body.counter-button, #button1spin.counter-button, #subtractButton1.counter-button {
     background-color: #ea4335; /* Red */
+    color: white;
 }
 
-#button2 {
+/* Specific styles for Blue buttons */
+#button2.counter-button, #button2body.counter-button, #button2spin.counter-button {
     background-color: #4285f4; /* Blue */
+    color: white;
 }
