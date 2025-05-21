@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize the counter manager
-    const counterManager = new CounterManager('ws://192.168.2.61:8765');
+    const counterManager = new CounterManager('ws://localhost:8765');
     console.log("CounterManager WebSocket:", counterManager.socket);
     counterManager.connect();
 

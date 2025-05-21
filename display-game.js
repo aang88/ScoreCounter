@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const blueCounterElement = document.querySelector('.counter-value:nth-of-type(2)');
     
     // Create direct WebSocket connection for display
-    const socket = new WebSocket('ws://192.168.2.61:8765');
+    const socket = new WebSocket('ws://localhost:8765');
     
     // Connection opened
     socket.onopen = function() {

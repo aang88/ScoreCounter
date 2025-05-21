@@ -2,6 +2,7 @@ import asyncio
 import json
 import websockets
 import time
+import socket
 
 # Shared state
 counters = {}
@@ -226,12 +227,67 @@ async def broadcast(message):
         for websocket in websockets_to_remove:
             connected_clients.remove(websocket)
 
+def print_clickable_links(ips, http_port=8000):
+    print("\n" + "="*70)
+    print("🌐 SCORE COUNTER SERVER RUNNING")
+    print("="*70)
+    
+    print("\n📱 ACCESS ON THIS DEVICE:")
+    print(f"   http://localhost:{http_port}/display.html")
+    print(f"   http://localhost:{http_port}/buttons.html")
+    
+    if ips:
+        print("\n📲 ACCESS FROM OTHER DEVICES:")
+        print("-"*50)
+        for ip in ips:
+            # Make URLs clickable in modern terminals with color highlighting
+            print(f"   \033[1;36mhttp://{ip}:{http_port}/display.html\033[0m  <-- CLICK THIS LINK")
+            print(f"   http://{ip}:{http_port}/buttons.html")
+            print()
+    
+    print("\n💡 SERVER INFO:")
+    print(f"   WebSocket: ws://{ips[0] if ips else 'localhost'}:8765")
+    print(f"   Discovery: http://{ips[0] if ips else 'localhost'}:8766/discover")
+    
+    print("\n💻 COPY THIS URL TO YOUR BROWSER OR PHONE:")
+    if ips:
+        print(f"   \033[1;32mhttp://{ips[0]}:{http_port}/display.html\033[0m")
+    
+    print("\n⌨️  Press Ctrl+C to stop the server")
+    print("="*70)
+
+def get_local_ip():
+    try:
+        # This creates a socket that doesn't actually connect
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # This doesn't actually send any packets
+        s.connect(('8.8.8.8', 1))
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception as e:
+        print(f"Error getting local IP: {e}")
+        
+        # Alternative method
+        try:
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            if local_ip != '127.0.0.1':  # Avoid returning localhost
+                return local_ip
+        except Exception as e:
+            print(f"Error with alternative IP detection: {e}")
+            
+        return 'localhost'  # Fallback
+
 # Start server
 async def main():
     # Use 0.0.0.0 to accept connections from any IP
+    local_ip = get_local_ip()
     async with websockets.serve(counter_server, "0.0.0.0", 8765):
         print("WebSocket server started on 0.0.0.0:8765")
+        print_clickable_links([local_ip], 8000)
         await asyncio.Future()  # Run forever
 
 if __name__ == "__main__":
     asyncio.run(main())
+

@@ -4,7 +4,7 @@
 const SERVER_CONFIG = {
     // WebSocket server URL
     // Replace with your actual server IP address
-    websocketUrl: 'ws://192.168.2.61:8765',
+    websocketUrl: 'ws://localhost:8765',
     
     // How often to send ping messages (in milliseconds)
     pingInterval: 30000
