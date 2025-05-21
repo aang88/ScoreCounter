@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize the counter manager
-    const counterManager = new CounterManager('ws://localhost:8765');
+    const wsHost = window.location.hostname || 'localhost';
+    const wsPort = '8765'; // Keep the same port
+    const wsUrl = `ws://${wsHost}:${wsPort}`;
+    
+    // Initialize the counter manager with dynamic WebSocket URL
+    const counterManager = new CounterManager(wsUrl);
     
     // Get references to DOM elements
     const counterButton = document.getElementById('counterButton');

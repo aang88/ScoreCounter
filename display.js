@@ -182,7 +182,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize the counter manager
-    const counterManager = new CounterManager('ws://localhost:8765');
+    const wsHost = window.location.hostname || 'localhost';
+    const wsPort = '8765'; // Keep the same port
+    const wsUrl = `ws://${wsHost}:${wsPort}`;
+    const counterManager = new CounterManager(wsUrl);
     console.log("CounterManager WebSocket:", counterManager.socket);
     counterManager.connect();
 

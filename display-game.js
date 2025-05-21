@@ -4,8 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const redCounterElement = document.querySelector('.counter-value:nth-of-type(1)');
     const blueCounterElement = document.querySelector('.counter-value:nth-of-type(2)');
     
-    // Create direct WebSocket connection for display
-    const socket = new WebSocket('ws://localhost:8765');
+    
+    const wsHost = window.location.hostname || 'localhost';
+    const wsPort = '8765';
+    const socket = new WebSocket(`ws://${wsHost}:${wsPort}`);
     
     // Connection opened
     socket.onopen = function() {
