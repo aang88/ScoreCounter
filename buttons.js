@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for addButton1");
                 addButton1.addEventListener('click', () => {
                     console.log("addButton1 clicked");
-                    counterManager.incrementCounter('red');
+                    counterManager.incrementCounter('Hong');
                 });
             }
 
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for addButton1Body");
                 addButton1Body.addEventListener('click', () => {
                     console.log("addButton1Body clicked");
-                    counterManager.incrementCounter('red', 2); // Increment by 1
+                    counterManager.incrementCounter('Hong', 2); // Increment by 1
                 });
             }
 
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for addButton1Spin");
                 addButton1Spin.addEventListener('click', () => {
                     console.log("addButton1Spin clicked");
-                    counterManager.incrementCounter('red', 4); // Increment by 1
+                    counterManager.incrementCounter('Hong', 4); // Increment by 1
                 });
             }
     
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for subtractButton1");
                 subtractButton1.addEventListener('click', () => {
                     console.log("subtractButton1 clicked");
-                    counterManager.decrementCounter('red', -1); // Decrement by 1
+                    counterManager.decrementCounter('Hong', -1); // Decrement by 1
                 });
             }
     
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for addButton2");
                 addButton2.addEventListener('click', () => {
                     console.log("addButton2 clicked");
-                    counterManager.incrementCounter('blue');
+                    counterManager.incrementCounter('Chung');
                 });
             }
 
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for addButton2Body");
                 addButton2Body.addEventListener('click', () => {
                     console.log("addButton2Body clicked");
-                    counterManager.incrementCounter('blue', 2); // Increment by 1
+                    counterManager.incrementCounter('Chung', 2); // Increment by 1
                 });
             }
 
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for addButton2Spin");
                 addButton2Spin.addEventListener('click', () => {
                     console.log("addButton2Spin clicked");
-                    counterManager.incrementCounter('blue', 4); // Increment by 1
+                    counterManager.incrementCounter('Chung', 4); // Increment by 1
                 });
             }
     
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log("Setting up event listener for subtractButton2");
                 subtractButton2.addEventListener('click', () => {
                     console.log("subtractButton2 clicked");
-                    counterManager.decrementCounter('blue', -1); // Decrement by 1
+                    counterManager.decrementCounter('Chung', -1); // Decrement by 1
                 });
             }
         } else {
@@ -194,8 +194,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.counters = data.values;
                     
                     // Update UI elements
-                    if (value1) value1.textContent = this.counters.red || 0;
-                    if (value2) value2.textContent = this.counters.blue || 0;
+                    if (value1) value1.textContent = this.counters.Hong || 0;
+                    if (value2) value2.textContent = this.counters.Chung || 0;
                     
                     if (this.onCounterUpdate) {
                         this.onCounterUpdate(this.counters);

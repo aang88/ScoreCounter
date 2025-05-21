@@ -38,14 +38,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Counter update received:', data.values);
                 
                 // Update red counter
-                if (data.values.red !== undefined && redCounterElement) {
-                    redCounterElement.textContent = data.values.red;
+                if (data.values.Hong !== undefined && redCounterElement) {
+                    redCounterElement.textContent = data.values.Hong;
                     highlight(redCounterElement);
                 }
                 
                 // Update blue counter
-                if (data.values.blue !== undefined && blueCounterElement) {
-                    blueCounterElement.textContent = data.values.blue;
+                if (data.values.Chung !== undefined && blueCounterElement) {
+                    blueCounterElement.textContent = data.values.Chung;
                     highlight(blueCounterElement);
                 }
             }

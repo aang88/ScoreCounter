@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Get counter IDs from URL parameter
     const urlParams = new URLSearchParams(window.location.search);
-    const counterIds = urlParams.get('ids') ? urlParams.get('ids').split(',') : ['red', 'blue'];
+    const counterIds = urlParams.get('ids') ? urlParams.get('ids').split(',') : ['Chung', 'Hong'];
     
     // Get counter names from URL (or use default names)
     const counterNames = {};
@@ -10,16 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
         counterNames[id] = urlParams.get('name-' + id) || id;
     });
     
-    // Create title if it doesn't exist
-    let titleElement = document.querySelector('h1');
-    if (!titleElement) {
-        titleElement = document.createElement('h1');
-        titleElement.textContent = 'Score Counter';
-        titleElement.style.textAlign = 'center';
-        titleElement.style.marginBottom = '30px';
-        document.body.appendChild(titleElement);
-    }
-    
+   
     // Create game controls if they don't exist
     let gameControls = document.getElementById('gameControls');
     if (!gameControls) {
@@ -27,16 +18,16 @@ document.addEventListener('DOMContentLoaded', function() {
         gameControls.id = 'gameControls';
         gameControls.className = 'game-controls';
         gameControls.style.display = 'flex';
-        gameControls.style.justifyContent = 'space-between';
+        gameControls.style.justifyContent = 'center ';
         gameControls.style.alignItems = 'center';
-        gameControls.style.width = '100%';
-        gameControls.style.maxWidth = '600px';
-        gameControls.style.marginBottom = '20px';
-        gameControls.style.padding = '10px';
+        gameControls.style.width = '99%';
         gameControls.style.backgroundColor = '#f0f0f0';
         gameControls.style.borderRadius = '8px';
-        gameControls.style.marginLeft = 'auto';
+        gameControls.style.padding = '15px';
+        gameControls.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
         gameControls.style.marginRight = 'auto';
+        gameControls.style.marginLeft = 'auto';
+        gameControls.style.gap = '200px';
         
         const newGameButton = document.createElement('button');
         newGameButton.id = 'newGameButton';
@@ -49,6 +40,14 @@ document.addEventListener('DOMContentLoaded', function() {
         newGameButton.style.borderRadius = '5px';
         newGameButton.style.cursor = 'pointer';
         newGameButton.style.fontSize = '16px';
+
+        const logo = document.createElement('div');
+        logo.id = 'roundInfo';
+        logo.textContent = 'Western Taekwondo';
+        logo.style.fontSize = '18px';
+        logo.style.fontWeight = 'bold';
+        logo.style.textAlign = 'center';
+        logo.style.marginLeft = '60px';
         
         const roundInfo = document.createElement('div');
         roundInfo.id = 'roundInfo';
@@ -58,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         roundInfo.style.fontWeight = 'bold';
         
         gameControls.appendChild(newGameButton);
+        gameControls.appendChild(logo);
         gameControls.appendChild(roundInfo);
         document.body.appendChild(gameControls);
     }
@@ -68,14 +68,16 @@ document.addEventListener('DOMContentLoaded', function() {
         timerContainer = document.createElement('div');
         timerContainer.id = 'timerContainer';
         timerContainer.className = 'timer-container';
-        timerContainer.style.margin = '20px 0';
+ 
         timerContainer.style.padding = '15px';
+        timerContainer.style.marginLeft = '-20px';
+        timerContainer.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        timerContainer.display = 'flex';
+        timerContainer.style.flexDirection = 'column';
         timerContainer.style.backgroundColor = '#f8f8f8';
         timerContainer.style.borderRadius = '10px';
         timerContainer.style.textAlign = 'center';
         timerContainer.style.width = '100%';
-        timerContainer.style.maxWidth = '600px';
-        timerContainer.style.marginLeft = 'auto';
         timerContainer.style.marginRight = 'auto';
         
         const timerDisplay = document.createElement('div');
@@ -143,10 +145,18 @@ document.addEventListener('DOMContentLoaded', function() {
         counterContainer = document.createElement('div');
         counterContainer.id = 'counterContainer';
         counterContainer.className = 'counter-container';
-        counterContainer.style.width = '100%';
-        counterContainer.style.maxWidth = '600px';
+        counterContainer.style.width = '90%';
+        
+        counterContainer.style.height = '150%';
         counterContainer.style.marginLeft = 'auto';
         counterContainer.style.marginRight = 'auto';
+        counterContainer.style.display = 'flex';
+        counterContainer.style.flexDirection = 'row';
+        counterContainer.style.justifyContent = 'center';
+        counterContainer.style.gap = '40px';
+        counterContainer.style.paddingLeft = '20px'; // Add padding to counteract any margin issues
+        counterContainer.style.paddingRight = '20px'; // Add padding to counteract any margin issues
+        
         document.body.appendChild(counterContainer);
     }
 
@@ -195,6 +205,13 @@ document.addEventListener('DOMContentLoaded', function() {
         counterBox.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
         counterBox.style.display = 'flex';
         counterBox.style.justifyContent = 'space-between';
+        counterBox.style.width = '60%';
+        counterBox.style.height = 'auto'; // Allow height to adjust
+        counterBox.style.minHeight = '300px'; // Minimum height
+        counterBox.style.boxSizing = 'border-box';
+        counterBox.style.height = 'auto'
+        counterBox.style.flexDirection = 'column';
+        counterBox.style.justifyContent = 'center';
         counterBox.style.alignItems = 'center';
         
         const label = document.createElement('div');
@@ -202,16 +219,22 @@ document.addEventListener('DOMContentLoaded', function() {
         label.textContent = counterNames[id];
         label.style.fontSize = '24px';
         label.style.fontWeight = 'bold';
-        label.style.color = id === 'red' ? '#ea4335' : '#4285f4';
+        label.style.color = id === 'Hong' ? '#ea4335' : '#4285f4';
         
         const value = document.createElement('div');
         value.className = 'counter-value';
         value.textContent = '0';
-        value.style.fontSize = '48px';
+        value.style.fontSize = '2000%';
         value.style.fontWeight = 'bold';
-        value.style.minWidth = '80px';
-        value.style.textAlign = 'right';
-        value.style.color = id === 'red' ? '#ea4335' : '#4285f4';
+        value.style.width = '100%'; // Take up full width of parent
+        value.style.display = 'flex'; // Use flexbox for centering
+        value.style.justifyContent = 'center'; // Center horizontally
+        value.style.alignItems = 'center'; // Center vertically
+        value.style.textAlign = 'center';
+        value.style.color = id === 'Hong' ? '#ea4335' : '#4285f4';
+        value.style.lineHeight = '1'; // Tighten line height
+        value.style.margin = '0'; // Remove any margin
+        value.style.padding = '0'; // Remove any padding    
         
         counterValues[id] = value;
         
