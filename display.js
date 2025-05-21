@@ -84,10 +84,11 @@ document.addEventListener('DOMContentLoaded', function() {
         timerDisplay.id = 'timerDisplay';
         timerDisplay.className = 'timer-display';
         timerDisplay.textContent = '00:00';
-        timerDisplay.style.fontSize = '48px';
+        timerDisplay.style.fontFamily = 'Bebas Neue, sans-serif';
+        timerDisplay.style.fontSize = '80px';
         timerDisplay.style.fontWeight = 'bold';
+        timerDisplay.style.fontStyle = 'italic';
         timerDisplay.style.marginBottom = '15px';
-        timerDisplay.style.fontFamily = 'monospace';
         
         const timerControls = document.createElement('div');
         timerControls.className = 'timer-controls';
@@ -216,11 +217,14 @@ document.addEventListener('DOMContentLoaded', function() {
         counterBox.style.flexDirection = 'column';
         counterBox.style.justifyContent = 'center';
         counterBox.style.alignItems = 'center';
+        counterBox.style.fontFamily = 'Bebas Neue, sans-serif';
+        counterBox.style.fontStyle = '24px';
+        counterBox.style.marginBottom = '30px';
         
         const label = document.createElement('div');
         label.className = 'counter-label';
         label.textContent = counterNames[id];
-        label.style.fontSize = '24px';
+        label.style.fontSize = '48px';
         label.style.fontWeight = 'bold';
         label.style.color = id === 'Hong' ? '#ea4335' : '#4285f4';
         
