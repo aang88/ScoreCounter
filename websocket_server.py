@@ -90,20 +90,27 @@ async def counter_server(websocket):
                 })
                 
             elif data.get("type") == "timer-start":
-                # First declare global, then use the variable
-                
                 # Store the duration in a local variable
-                duration = timer_state.get("duration", 60)
+                duration = data.get("duration", timer_state.get("duration", 60))
                 
-                # Now update
+                # Calculate current timestamp for elapsed time calculation
+                current_time = int(time.time() * 1000)
+                start_time = data.get("startTime", current_time)
+                
+                # Calculate elapsed time
+                elapsed_time = data.get("elapsedTime", 0)
+                
                 timer_state = {
                     "type": "timer-start",
                     "isRunning": True,
-                    "startTime": data.get("startTime", int(time.time() * 1000)),
+                    "startTime": start_time,
+                    "elapsedTime": elapsed_time,
                     "pausedTime": 0,
                     "pausedTimeRemaining": 0,
-                    "duration": duration  # Use the saved value
+                    "duration": duration
                 }
+                
+                print(f"Timer started with duration: {duration}, elapsedTime: {elapsed_time}")
                 
                 # Broadcast to all clients
                 await broadcast(timer_state)

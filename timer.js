@@ -68,8 +68,6 @@ class TimerManager {
         }
         this.intervalId = setInterval(() => this.updateTimer(), 100);
 
-        
-    
         // Wait for WebSocket to be ready
         if (this.websocket) {
             if (this.websocket.readyState === WebSocket.OPEN) {
@@ -77,9 +75,12 @@ class TimerManager {
             } else {
                 console.warn("WebSocket not ready. Retrying...");
                 const retryInterval = setInterval(() => {
-                    if (this.websocket.readyState === WebSocket.OPEN) {
+                    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
                         clearInterval(retryInterval);
                         this.sendTimerStartMessage();
+                    } else if (!this.websocket || this.websocket.readyState === WebSocket.CLOSED) {
+                        clearInterval(retryInterval);
+                        console.error("WebSocket connection failed");
                     }
                 }, 100); // Retry every 100ms
             }
@@ -90,10 +91,16 @@ class TimerManager {
     
     sendTimerStartMessage() {
         console.log("Sending timer start message to server");
+        
+        // Calculate elapsed time if we're resuming from pause
+        const elapsedTime = this.pausedTimeRemaining ? 
+            (this.duration * 1000 - this.pausedTimeRemaining) : 0;
+            
         this.websocket.send(JSON.stringify({
             type: 'timer-start',
             startTime: this.startTime,
             duration: this.duration,
+            elapsedTime: elapsedTime, // Add this to help with synchronization
             pausedTimeRemaining: this.pausedTimeRemaining
         }));
     }
@@ -124,19 +131,20 @@ class TimerManager {
     
     // Reset the timer
     reset() {
+        const currentDuration = this.duration; // Save current duration
         this.isRunning = false;
         this.startTime = 0;
-        this.pausedTimeRemaining = 0;
+        this.pausedTimeRemaining = currentDuration * 1000; // Use saved duration
         clearInterval(this.intervalId);
         
         // Show full duration
-        this.updateTimerDisplay(this.duration * 1000);
+        this.updateTimerDisplay(this.pausedTimeRemaining);
         
         // Notify server if websocket is available
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
             this.websocket.send(JSON.stringify({
                 type: 'timer-reset',
-                duration: this.duration  // Include duration for better sync
+                duration: currentDuration  // Send the saved duration
             }));
         }
         
@@ -197,19 +205,30 @@ class TimerManager {
     handleServerMessage(data) {
         console.log('Timer message received:', data);
         
+        // Always prioritize duration updates to ensure consistency
+        if (data.duration && !isNaN(data.duration)) {
+            console.log(`Updating duration from ${this.duration} to ${parseFloat(data.duration)}`);
+            this.duration = parseFloat(data.duration);
+        }
+        
         if (data.type === 'timer-start') {
+            console.log(`Timer started with duration: ${data.duration || 'not specified'}, startTime: ${data.startTime || 'not specified'}, elapsedTime: ${data.elapsedTime || 'not specified'}`);
             this.isRunning = true;
             
-            // Validate startTime
-            if (data.startTime && !isNaN(data.startTime)) {
+            // Calculate start time consistently across devices
+            if (typeof data.elapsedTime === 'number' && !isNaN(data.elapsedTime)) {
+                // Use elapsed time to calculate local start time (most reliable)
+                this.startTime = Date.now() - data.elapsedTime;
+                console.log(`Using elapsedTime ${data.elapsedTime}ms to calculate startTime: ${this.startTime}`);
+            } else if (data.startTime && !isNaN(data.startTime)) {
+                // Less reliable: using server's startTime directly
+                // This can cause sync issues due to network latency
                 this.startTime = parseInt(data.startTime);
+                console.log(`Using startTime directly: ${this.startTime}`);
             } else {
+                // Fallback, least reliable
                 this.startTime = Date.now();
-            }
-            
-            // Validate duration
-            if (data.duration && !isNaN(data.duration)) {
-                this.duration = parseFloat(data.duration);
+                console.log(`No time data provided, using current time: ${this.startTime}`);
             }
             
             // Clear any existing interval to prevent duplicates
@@ -218,8 +237,6 @@ class TimerManager {
             
             // Force a display update
             this.updateTimer();
-            
-            console.log("Timer started with startTime:", this.startTime);
         }
         else if (data.type === 'timer-pause') {
             this.isRunning = false;
