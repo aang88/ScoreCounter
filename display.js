@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("TimerManager initialized with WebSocket:", timerManager.websocket);
     const timerDisplay = document.getElementById('timerDisplay');
     timerManager.setTimerElement(timerDisplay);
-    timerManager.setDuration(10); // 2 minutes
+    timerManager.setDuration(60); // 2 minutes
 
     // Initialize game state manager
     const gameState = new GameStateManager(counterManager, timerManager);

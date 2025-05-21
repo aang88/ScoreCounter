@@ -59,15 +59,17 @@ class TimerManager {
     
         this.isRunning = true;
         if (this.pausedTimeRemaining) {
-            console.log("Resuming timer from paused state");
+            console.log("Resuming timer from paused state with remaining time:", this.pausedTimeRemaining);
+            // Fix: Calculate start time correctly based on remaining time
             this.startTime = Date.now() - (this.duration * 1000 - this.pausedTimeRemaining);
-            this.pausedTimeRemaining = null; // Clear paused time
+            console.log("New calculated start time:", this.startTime);
+            // Don't clear pausedTimeRemaining yet to allow it to be sent to server
         } else {
             // Start fresh if not resuming
             this.startTime = Date.now();
         }
         this.intervalId = setInterval(() => this.updateTimer(), 100);
-
+    
         // Wait for WebSocket to be ready
         if (this.websocket) {
             if (this.websocket.readyState === WebSocket.OPEN) {
@@ -103,6 +105,9 @@ class TimerManager {
             elapsedTime: elapsedTime, // Add this to help with synchronization
             pausedTimeRemaining: this.pausedTimeRemaining
         }));
+        
+        // Now that we've sent the message, clear pausedTimeRemaining
+        this.pausedTimeRemaining = null;
     }
     
     // Pause the timer
