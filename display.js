@@ -483,6 +483,24 @@ document.addEventListener('DOMContentLoaded', function() {
             background-color: #d4edda;
             font-weight: bold;
         }
+
+        .game-button, .timer-button {
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .game-button:hover, .timer-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background-color: #5a3e7f !important; /* Slightly lighter shade */
+        }
+        
+        .game-button:active, .timer-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            background-color: #362449 !important; /* Slightly darker shade */
+        }
     `;
     document.head.appendChild(style);
     
