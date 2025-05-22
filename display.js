@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
         gameControls.style.justifyContent = 'center ';
         gameControls.style.alignItems = 'center';
         gameControls.style.width = '99%';
-        gameControls.style.backgroundColor = '#f0f0f0';
+        gameControls.style.backgroundColor = '#8163a5';
         gameControls.style.fontFamily = 'Nunito Sans, sans-serif';
         gameControls.style.borderRadius = '8px';
         gameControls.style.padding = '15px';
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         newGameButton.className = 'game-button';
         newGameButton.textContent = 'New Game';
         newGameButton.style.padding = '10px 20px';
-        newGameButton.style.backgroundColor = '#4285f4';
+        newGameButton.style.backgroundColor = '#422d5e';
         newGameButton.style.color = 'white';
         newGameButton.style.border = 'none';
         newGameButton.style.fontFamily = 'Nunito Sans, sans-serif';
@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         logo.style.fontWeight = 'bold';
         logo.style.textAlign = 'center';
         logo.style.marginLeft = '60px';
+        logo.style.color = '#fff';
         
         const roundInfo = document.createElement('div');
         roundInfo.id = 'roundInfo';
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
         roundInfo.textContent = 'Press New Game to start';
         roundInfo.style.fontSize = '18px';
         roundInfo.style.fontWeight = 'bold';
+        roundInfo.style.color = '#fff';
         
         gameControls.appendChild(newGameButton);
         gameControls.appendChild(logo);
@@ -76,10 +78,10 @@ document.addEventListener('DOMContentLoaded', function() {
         timerContainer.style.paddingTop = '15px';
         timerContainer.style.paddingBottom = '15px';
         timerContainer.style.marginLeft = '-40px';
-        timerContainer.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        timerContainer.style.boxShadow = '0 4px 8px rgb(0, 0, 0)';
+        timerContainer.style.backgroundColor = '#543977';
         timerContainer.style.display = 'flex';
         timerContainer.style.flexDirection = 'column';
-        timerContainer.style.backgroundColor = '#f8f8f8';
         timerContainer.style.borderRadius = '10px';
         timerContainer.style.textAlign = 'center';
         timerContainer.style.justifyContent = 'center';
@@ -100,8 +102,9 @@ document.addEventListener('DOMContentLoaded', function() {
         timerDisplay.style.width = '25%';
         timerDisplay.style.paddingRight = '10px';
         timerDisplay.style.borderRadius = '10px';
-        timerDisplay.style.backgroundColor = '#f0f0f0';
-        timerDisplay.style.boxShadow = 'inset 0 0 10px rgb(54, 53, 53)';
+        timerDisplay.style.backgroundColor = '#422d5e';
+        timerDisplay.style.color = '#fff';
+        timerDisplay.style.boxShadow = 'inset 0 0 10px rgb(21, 3, 43)';
         
         const timerControls = document.createElement('div');
         timerControls.className = 'timer-controls';
@@ -113,12 +116,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const startPauseButton = document.createElement('button');
         startPauseButton.id = 'startPauseButton';
         startPauseButton.className = 'timer-button';
-        startPauseButton.textContent = 'Start';
+        startPauseButton.innerHTML = '<i class="fa-solid fa-play"></i>'; // Icon only, no text
         startPauseButton.style.padding = '10px 20px';
         startPauseButton.style.fontSize = '16px';
         startPauseButton.style.border = 'none';
         startPauseButton.style.borderRadius = '5px';
-        startPauseButton.style.backgroundColor = '#4285f4';
+        startPauseButton.style.backgroundColor = '#422d5e';
         startPauseButton.style.color = 'white';
         startPauseButton.style.cursor = 'pointer';
         startPauseButton.style.fontFamily = 'Nunito Sans, sans-serif';
@@ -126,12 +129,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const resetButton = document.createElement('button');
         resetButton.id = 'resetButton';
         resetButton.className = 'timer-button';
-        resetButton.textContent = 'Reset';
+        resetButton.innerHTML = '<i class="fa-solid fa-rotate-right"></i>';
         resetButton.style.padding = '10px 20px';
         resetButton.style.fontSize = '16px';
         resetButton.style.border = 'none';
         resetButton.style.borderRadius = '5px';
-        resetButton.style.backgroundColor = '#4285f4';
+        resetButton.style.backgroundColor = '#422d5e';
         resetButton.style.color = 'white';
         resetButton.style.cursor = 'pointer';
         resetButton.style.fontFamily = 'Nunito Sans, sans-serif';
@@ -289,11 +292,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (timerManager.isRunning) {
                 console.log("Pausing timer");
                 timerManager.pause();
-                startPauseButton.textContent = 'Start';
+                startPauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
             } else {
                 timerManager.start();
                 console.log("Starting timer");
-                startPauseButton.textContent = 'Pause';
+                startPauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
             }
         });
     }
@@ -301,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetButton) {
         resetButton.addEventListener('click', () => {
             timerManager.reset();
-            startPauseButton.textContent = 'Start';
+            startPauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
         });
     }
     
@@ -312,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!gameState.isGameInProgress) {
                 const rounds = parseInt(prompt('How many rounds (for best of N)?', '3')) || 3;
                 gameState.startGame(rounds);
-                startPauseButton.textContent = 'Pause';
+                startPauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
             }
         });
     }
@@ -367,7 +370,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         else if (data.type && data.type.startsWith('timer-')) {
                             timerManager.handleServerMessage(data);
                             if (startPauseButton) {
-                                startPauseButton.textContent = timerManager.isRunning ? 'Pause' : 'Start';
+                                startPauseButton.innerHTML = timerManager.isRunning ? '<i class="fa-solid fa-pause"></i>' : 
+            '<i class="fa-solid fa-play"></i>';
                             }
                         }
                         // For other message types, just call the original handler
