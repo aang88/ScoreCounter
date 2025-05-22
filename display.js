@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         gameControls.style.alignItems = 'center';
         gameControls.style.width = '99%';
         gameControls.style.backgroundColor = '#f0f0f0';
+        gameControls.style.fontFamily = 'Nunito Sans, sans-serif';
         gameControls.style.borderRadius = '8px';
         gameControls.style.padding = '15px';
         gameControls.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
@@ -37,14 +38,16 @@ document.addEventListener('DOMContentLoaded', function() {
         newGameButton.style.backgroundColor = '#4285f4';
         newGameButton.style.color = 'white';
         newGameButton.style.border = 'none';
+        newGameButton.style.fontFamily = 'Nunito Sans, sans-serif';
         newGameButton.style.borderRadius = '5px';
         newGameButton.style.cursor = 'pointer';
         newGameButton.style.fontSize = '16px';
 
         const logo = document.createElement('div');
         logo.id = 'roundInfo';
+        logo.style.fontFamily = 'Bebas Neue, sans-serif';
         logo.textContent = 'Western Taekwondo';
-        logo.style.fontSize = '18px';
+        logo.style.fontSize = '36px';
         logo.style.fontWeight = 'bold';
         logo.style.textAlign = 'center';
         logo.style.marginLeft = '60px';
@@ -69,16 +72,21 @@ document.addEventListener('DOMContentLoaded', function() {
         timerContainer.id = 'timerContainer';
         timerContainer.className = 'timer-container';
  
-        timerContainer.style.padding = '15px';
-        timerContainer.style.marginLeft = '-20px';
+            // timerContainer.style.padding = '-15px';
+        timerContainer.style.paddingTop = '15px';
+        timerContainer.style.paddingBottom = '15px';
+        timerContainer.style.marginLeft = '-40px';
         timerContainer.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-        timerContainer.display = 'flex';
+        timerContainer.style.display = 'flex';
         timerContainer.style.flexDirection = 'column';
         timerContainer.style.backgroundColor = '#f8f8f8';
         timerContainer.style.borderRadius = '10px';
         timerContainer.style.textAlign = 'center';
+        timerContainer.style.justifyContent = 'center';
+        timerContainer.style.alignItems = 'center';
         timerContainer.style.width = '100%';
         timerContainer.style.marginRight = 'auto';
+        timerContainer.style.marginLeft = 'auto';
         
         const timerDisplay = document.createElement('div');
         timerDisplay.id = 'timerDisplay';
@@ -89,12 +97,18 @@ document.addEventListener('DOMContentLoaded', function() {
         timerDisplay.style.fontWeight = 'bold';
         timerDisplay.style.fontStyle = 'italic';
         timerDisplay.style.marginBottom = '15px';
+        timerDisplay.style.width = '25%';
+        timerDisplay.style.paddingRight = '10px';
+        timerDisplay.style.borderRadius = '10px';
+        timerDisplay.style.backgroundColor = '#f0f0f0';
+        timerDisplay.style.boxShadow = 'inset 0 0 10px rgb(54, 53, 53)';
         
         const timerControls = document.createElement('div');
         timerControls.className = 'timer-controls';
         timerControls.style.display = 'flex';
         timerControls.style.justifyContent = 'center';
         timerControls.style.gap = '15px';
+        timerControls.style.fontFamily = 'Nunito Sans, sans-serif';
         
         const startPauseButton = document.createElement('button');
         startPauseButton.id = 'startPauseButton';
@@ -107,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startPauseButton.style.backgroundColor = '#4285f4';
         startPauseButton.style.color = 'white';
         startPauseButton.style.cursor = 'pointer';
+        startPauseButton.style.fontFamily = 'Nunito Sans, sans-serif';
         
         const resetButton = document.createElement('button');
         resetButton.id = 'resetButton';
@@ -119,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resetButton.style.backgroundColor = '#4285f4';
         resetButton.style.color = 'white';
         resetButton.style.cursor = 'pointer';
+        resetButton.style.fontFamily = 'Nunito Sans, sans-serif';
         
         timerControls.appendChild(startPauseButton);
         timerControls.appendChild(resetButton);
