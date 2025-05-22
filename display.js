@@ -89,6 +89,36 @@ document.addEventListener('DOMContentLoaded', function() {
         timerContainer.style.width = '100%';
         timerContainer.style.marginRight = 'auto';
         timerContainer.style.marginLeft = 'auto';
+        // timerContainer.style.position = 'relative';
+        // timerContainer.style.overflow = 'hidden';
+
+        // Create gradient overlay for left corner
+        const leftGradient = document.createElement('div');
+        leftGradient.style.position = 'absolute';
+        leftGradient.style.top = '0';
+        leftGradient.style.left = '0';
+        leftGradient.style.width = '25%';
+        leftGradient.style.height = '100%';
+        leftGradient.style.background = 'linear-gradient(90deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 100%)';
+        leftGradient.style.pointerEvents = 'none'; // Make it non-interactive
+        leftGradient.style.borderTopLeftRadius = '10px';
+        leftGradient.style.borderBottomLeftRadius = '10px';
+        
+        // Create gradient overlay for right corner
+        const rightGradient = document.createElement('div');
+        rightGradient.style.position = 'absolute';
+        rightGradient.style.top = '0';
+        rightGradient.style.right = '0';
+        rightGradient.style.width = '25%';
+        rightGradient.style.height = '100%';
+        rightGradient.style.background = 'linear-gradient(270deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 100%)';
+        rightGradient.style.pointerEvents = 'none'; // Make it non-interactive
+        rightGradient.style.borderTopRightRadius = '10px';
+        rightGradient.style.borderBottomRightRadius = '10px';
+        
+        // Add these gradient overlays to the timer container
+        timerContainer.appendChild(leftGradient);
+        timerContainer.appendChild(rightGradient);
         
         const timerDisplay = document.createElement('div');
         timerDisplay.id = 'timerDisplay';
