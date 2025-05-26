@@ -107,6 +107,10 @@ async def counter_server(websocket):
             elif data.get("type") == "reset-counters":
                 # Reset all counters to zero
                 counters.clear()
+
+                await broadcast({
+                    "type": "reset-counters"
+                })
                 
                 # Broadcast updated counter values
                 await broadcast({"type": "counters", "values": counters})

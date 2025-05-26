@@ -399,14 +399,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }
                         else if (data.type === 'reset-counters') {
-                            // Reset all counters to zero
+                            console.log("Reset counters message received - zeroing all counters");
+                            // Reset all counter displays to zero
                             for (const id of counterIds) {
                                 const element = counterValues[id];
                                 if (element) {
                                     console.log(`Resetting ${id} to 0`);
                                     element.textContent = '0';
+                                    
+                                    // Add animation for reset
+                                    element.style.transform = 'scale(0.8)';
+                                    element.style.transition = 'transform 0.3s';
+                                    setTimeout(() => {
+                                        element.style.transform = 'scale(1)';
+                                    }, 300);
                                 }
                             }
+                            
+                            // Also reset our local counters object
+                            this.counters = {};
                         }
                         // Handle timer messages
                         else if (data.type && data.type.startsWith('timer-')) {

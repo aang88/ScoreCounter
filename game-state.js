@@ -194,6 +194,8 @@ class GameStateManager {
             return;
         }
 
+        this.resetAllCounters();
+
         this.currentRound++;
         
         // Reset counters for new round
