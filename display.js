@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("TimerManager initialized with WebSocket:", timerManager.websocket);
     const timerDisplay = document.getElementById('timerDisplay');
     timerManager.setTimerElement(timerDisplay);
-    timerManager.setDuration(60); // 2 minutes
+    timerManager.setDuration(this.duration); // 2 minutes
 
     // Initialize game state manager
     const gameState = new GameStateManager(counterManager, timerManager);
@@ -344,7 +344,9 @@ document.addEventListener('DOMContentLoaded', function() {
         newGameButton.addEventListener('click', () => {
             if (!gameState.isGameInProgress) {
                 const rounds = parseInt(prompt('How many rounds (for best of N)?', '3')) || 3;
-                gameState.startGame(rounds);
+                const duration = parseInt(prompt('How long per round (in seconds)', '60')) || 60;
+                console.log(`Starting new game with ${rounds} rounds of ${duration} seconds each`);
+                gameState.startGame(rounds,duration);
                 startPauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
             }
         });
@@ -394,6 +396,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Also call the original handler if it exists
                             if (this.onCounterUpdate) {
                                 this.onCounterUpdate(this.counters);
+                            }
+                        }
+                        else if (data.type === 'reset-counters') {
+                            // Reset all counters to zero
+                            for (const id of counterIds) {
+                                const element = counterValues[id];
+                                if (element) {
+                                    console.log(`Resetting ${id} to 0`);
+                                    element.textContent = '0';
+                                }
                             }
                         }
                         // Handle timer messages

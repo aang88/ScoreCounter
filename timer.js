@@ -12,7 +12,6 @@ class TimerManager {
         this.duration = 60; // Default 60 seconds
     }
 
-
     set websocket(ws) {
         console.log("Setting timer websocket:", ws ? "connected" : "null");
         this._websocket = ws;
@@ -24,9 +23,13 @@ class TimerManager {
     
     // Set the timer duration in seconds
     setDuration(seconds) {
+        if (typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) {
+            console.error("Invalid duration provided:", seconds);
+            return this; // Ignore invalid durations
+        }
+        console.log("Setting timer duration to:", seconds);
         this.duration = seconds;
-        // Update display initially to show full time
-        this.updateTimerDisplay(this.duration * 1000);
+        this.updateTimerDisplay(this.duration * 1000); // Update display
         return this;
     }
 
@@ -136,24 +139,21 @@ class TimerManager {
     
     // Reset the timer
     reset() {
-        const currentDuration = this.duration; // Save current duration
-        this.isRunning = false;
-        this.startTime = 0;
-        this.pausedTimeRemaining = currentDuration * 1000; // Use saved duration
-        clearInterval(this.intervalId);
+        console.log(`Resetting timer to duration: ${this.duration}`);
         
-        // Show full duration
-        this.updateTimerDisplay(this.pausedTimeRemaining);
-        
-        // Notify server if websocket is available
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-            this.websocket.send(JSON.stringify({
+            const resetMessage = {
                 type: 'timer-reset',
-                duration: currentDuration  // Send the saved duration
-            }));
+                duration: this.duration  // Make sure this is included
+            };
+            
+            console.log(`Timer reset message sent to server with duration: ${this.duration}`);
+            this.websocket.send(JSON.stringify(resetMessage));
         }
         
-        return this;
+        this.isRunning = false;
+        this.startTime = 0;
+        this.pausedTime = this.duration * 1000;
     }
     
     // Toggle the timer between running and paused

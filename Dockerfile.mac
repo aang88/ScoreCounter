@@ -1,0 +1,28 @@
+FROM python:3.9-slim
+
+# Install required packages including binutils for objdump
+RUN apt-get update && apt-get install -y binutils && \
+    pip install pyinstaller qrcode pillow websockets
+
+# Set working directory
+WORKDIR /app
+
+# Copy your project files
+COPY *.py /app/
+COPY *.html /app/
+COPY *.js /app/
+COPY *.css /app/
+
+# Build ignoring Git version info
+RUN pyinstaller --name ScoreCounter --onefile \
+    --add-data "*.html:." \
+    --add-data "*.js:." \
+    --add-data "*.css:." \
+    --hidden-import=PIL._tkinter \
+    --hidden-import=PIL._imagingtk \
+    --hidden-import=PIL._tkinter_finder \
+    --log-level ERROR \
+    app.py
+
+# Tell PyInstaller to ignore Git warning
+ENV PYTHONWARNINGS="ignore:git"

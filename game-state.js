@@ -10,6 +10,7 @@ class GameStateManager {
         this.scores = {}; // Track scores by round
         this.roundWinners = []; // Track which team won each round
         this.roundInfoElement = null;
+        this.duration = 60; // Default round duration in seconds
         
         // Bind timer end event
         this.timerManager.setOnTimerEnd(() => this.handleRoundEnd());
@@ -112,7 +113,7 @@ class GameStateManager {
     }
     
     // Start a new game
-    startGame(maxRounds = 3) {
+    startGame(maxRounds = 3, duration = 60) {
         // Prevent multiple game starts
         if (this.isGameInProgress) {
             console.warn('A game is already in progress');
@@ -121,13 +122,16 @@ class GameStateManager {
     
         // Close any existing modals
         this.closeExistingModals();
-    
+        this.duration = duration; // Default to 60 seconds if not provided
         this.currentRound = 1;
         this.maxRounds = maxRounds;
         this.isGameOver = false;
         this.isGameInProgress = true; // Set game in progress
         this.scores = {};
         this.roundWinners = [];
+
+        // Set timer duration (2 minutes per round)
+        this.timerManager.setDuration(duration);
         
         // Reset counters via WebSocket
         this.resetAllCounters();
@@ -135,8 +139,7 @@ class GameStateManager {
         // Reset timer
         this.timerManager.reset();
         
-        // Set timer duration (2 minutes per round)
-        this.timerManager.setDuration(60);
+        
         
         // Start timer for first round
         this.timerManager.start();
@@ -403,9 +406,9 @@ class GameStateManager {
             if (!this.isGameInProgress) {
                 // Prompt for rounds
                 const rounds = parseInt(prompt('How many rounds (for best of N)?', '3')) || 3;
-                
+                const duration = parseInt(prompt('Round duration in seconds (default 60):', '60')) || 60;
                 // Start the new game
-                this.startGame(rounds);
+                this.startGame(rounds,duration);
             }
         };
         

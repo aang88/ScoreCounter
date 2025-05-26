@@ -143,7 +143,15 @@ async def counter_server(websocket):
                 
             elif data.get("type") == "timer-reset":
                 # Store the duration before resetting
-                duration = timer_state.get("duration", 60)
+                duration = data.get("duration")
+                
+                # Only fall back to existing duration if duration isn't in the request
+                if duration is None:
+                    duration = timer_state.get("duration", 60)
+                
+                print(f"Timer reset with specified duration: {duration}")
+                
+
                 
                 # ONLY SEND ONE MESSAGE - Use timer-reset type with pause state properties
                 timer_state = {
@@ -188,13 +196,16 @@ def global_timer_update(new_state):
     # Special handling for timer-reset
     elif new_state.get('type') == 'timer-reset':
         # Start fresh with only essential properties
+        duration = new_state.get('duration')
+        if duration is None:
+            duration = timer_state.get('duration', 60)
         reset_data = {
             "type": "timer-reset",
             "isRunning": False,
             "startTime": 0,
             "pausedTime": 0,
             "pausedTimeRemaining": 0,
-            "duration": new_state.get('duration', 60)
+            "duration": duration
         }
         timer_state.clear()  # Clear existing contents
         timer_state.update(reset_data)  # Add new contents
