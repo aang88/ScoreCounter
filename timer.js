@@ -205,6 +205,13 @@ class TimerManager {
         this.timerElement.textContent = 
             `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
+
+    getCurrentTime() {
+        //Get the current timer time formatted as 00:00
+        if (!this.isRunning) {
+            return this.formatTime(this.pausedTimeRemaining || this.duration * 1000);
+        }
+    }
     
     // Handle timer messages from the server
     handleServerMessage(data) {

@@ -3,6 +3,12 @@ import json
 import websockets
 import time
 import socket
+import firebase_admin
+from firebase_admin import firestore
+from firebase_admin import credentials
+import os
+from dotenv import load_dotenv
+load_dotenv()  
 
 # Shared state
 counters = {}
@@ -13,12 +19,29 @@ timer_state = {
     "startTime": 0,
     "pausedTime": 0
 }
+match_replay_holder = []
+round_count = 1
+cred = credentials.Certificate({
+    "type": "service_account",
+    "project_id": os.getenv('FIREBASE_PROJECT_ID'),
+    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
+    "private_key": os.getenv('FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
+    "client_email": os.getenv('FIREBASE_CLIENT_EMAIL'),
+    "client_id": os.getenv('FIREBASE_CLIENT_ID'),
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token"
+})
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
 async def counter_server(websocket):
-    global timer_state
+    global timer_state,round_count, match_replay_holder
     client_info = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
     print(f"New client connected: {client_info}")
     
+    #Hold match replay data
+    
+
     connected_clients.add(websocket)
     try:
         # Send initial counter values
@@ -47,6 +70,8 @@ async def counter_server(websocket):
                 new_value = max(0, current_value - value)
                 
                 counters[counter_id] = new_value
+
+                add_replay_data(data)
                 
                 # Broadcast updated counter values to all clients
                 await broadcast({
@@ -57,7 +82,8 @@ async def counter_server(websocket):
             if data.get("type") == "increment":
                 counter_id = data.get("counterId")
                 value = data.get("value", 1)
-                
+
+
                 # Check if we have a valid counter ID
                 if not counter_id:
                     print("Warning: Received increment without counter ID")
@@ -71,6 +97,8 @@ async def counter_server(websocket):
                 counters[counter_id] += value
                 print(f"Incremented {counter_id} to {counters[counter_id]}")
                 print(f"All counters now: {counters}")
+
+                add_replay_data(data)
                 
                 # Broadcast updated counter values
                 await broadcast({
@@ -177,6 +205,31 @@ async def counter_server(websocket):
             elif data.get("type") == "ping":
                 # Just respond with a pong to keep the connection alive
                 await websocket.send(json.dumps({"type": "pong"}))
+
+            elif data.get("type") == "round-start":
+                round_count += 1
+
+            elif data.get("type") == "game-over":
+                # Reset round count and match replay holder
+                json_replay = match_replay_to_json()
+                game_winner = data.get("game_winner", "unknown")
+                final_score = data.get("scores", "0-0")
+
+               
+                round_count = 1
+                match_replay_holder.clear()
+
+                #Append mach replay data to Firestore
+                db.collection('match_replays').add({
+                    'game_winner': game_winner,
+                    'final_score': final_score,
+                    'replay_data': json_replay,
+                    'timestamp': firestore.SERVER_TIMESTAMP
+                })
+              
+                
+                
+                
     except Exception as e:
         print(f"Error handling client {client_info}: {e}")
     finally:
@@ -300,6 +353,27 @@ def get_local_ip():
             print(f"Error with alternative IP detection: {e}")
             
         return 'localhost'  # Fallback
+    
+def add_replay_data(data):
+    technique = data.get("technique", "unknown")
+    time_stamp = data.get("timestamp", int(time.time() * 1000))
+    player = data.get("player", "unknown")
+
+    replay_data = {
+        "round": round_count,
+        "technique": technique,
+        "timestamp": time_stamp,
+        "player": player
+    }
+
+    match_replay_holder.append(replay_data)
+    print(f"Match replay data updated: {match_replay_holder}")
+
+def match_replay_to_json():
+    if match_replay_holder:
+        return json.dumps(match_replay_holder, indent=4)
+    else:
+        return "No match replay data available"
 
 # Start server
 async def main():

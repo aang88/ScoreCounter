@@ -1,5 +1,6 @@
 // counter.js - Reusable counter module
 
+
 class CounterManager {
     constructor(serverUrl) {
         this.serverUrl = serverUrl;
@@ -10,8 +11,10 @@ class CounterManager {
         this.connected = false;
         this.debugElement = null;
         
+        
         // For tap handling
         this.tapping = false;
+     
     }
     
     // Initialize the WebSocket connection
@@ -101,21 +104,23 @@ class CounterManager {
     }
     
     // Increment a counter
-    incrementCounter(counterId,value) {
+    incrementCounter(counterId,value,technique,player,timestamp) {
         if (!this.connected) {
             this.log(`Cannot increment ${counterId} - not connected`);
             return;
         }
-        
-        this.log(`Incrementing counter: ${counterId}`);
+        this.log(`Incrementing counter: ${counterId} by ${value || 1} with technique ${technique || 'unknown'} by player ${player || 'unknown'}`);
         this.socket.send(JSON.stringify({
             type: 'increment',
             counterId: counterId,
-            value: value || 1
+            value: value || 1,
+            technique: technique || 'unknown',
+            player: player || 'unknown',
+            timestamp: timestamp || new Date().toISOString()
         }));
     }
 
-    decrementCounter(counterId) {
+    decrementCounter(counterId,technique,player,timestamp) {
         if (!this.connected) {
             this.log(`Cannot decrement ${counterId} - not connected`);
             return;
@@ -125,6 +130,9 @@ class CounterManager {
         this.socket.send(JSON.stringify({
             type: 'subtract-counter',
             counterId: counterId,
+            technique: technique || 'unknown',
+            player: player || 'unknown',
+            timestamp: timestamp || new Date().toISOString()
         }));
     }
     

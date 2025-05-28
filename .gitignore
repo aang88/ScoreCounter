@@ -1,0 +1,29 @@
+.env
+.env.local
+.env.*.local
+
+# Firebase credentials
+serviceAccountKey.json
+firebase-credentials.json
+**/credentials/
+**/secrets/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -208,6 +208,13 @@ class GameStateManager {
         // Update round info
         this.updateRoundInfo();
         
+        //Broadcast round start via WebSocket
+        if (this.counterManager.socket && this.counterManager.socket.readyState === WebSocket.OPEN) {
+            this.counterManager.socket.send(JSON.stringify({
+                type: 'round-start'
+            }));
+        }
+
         // Announce new round
         this.announceGameState(`Round ${this.currentRound} started!`);
     }
@@ -361,6 +368,15 @@ class GameStateManager {
         // Update round info
         if (this.roundInfoElement) {
             this.roundInfoElement.textContent = `Game Over! Winner: ${overallWinner}`;
+        }
+
+        //Send final scores to WebSocket
+        if (this.counterManager.socket && this.counterManager.socket.readyState === WebSocket.OPEN) {
+            this.counterManager.socket.send(JSON.stringify({
+                type: 'game-over',
+                game_winner: overallWinner,
+                scores: this.calculateTotalScores(),
+            }));
         }
         
         // Announce winner
