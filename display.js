@@ -1,3 +1,4 @@
+
 // display.js - Complete implementation with timer and game management
 document.addEventListener('DOMContentLoaded', function() {
     // Get counter IDs from URL parameter
@@ -345,13 +346,318 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!gameState.isGameInProgress) {
                 const rounds = parseInt(prompt('How many rounds (for best of N)?', '3')) || 3;
                 const duration = parseInt(prompt('How long per round (in seconds)', '60')) || 60;
-                console.log(`Starting new game with ${rounds} rounds of ${duration} seconds each`);
-                gameState.startGame(rounds,duration);
-                startPauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+
+                // Get Player names from text field with drop down
+
+                showPlayerSelectionPopup((player1, player2) => {
+                    console.log(`Starting new game with ${rounds} rounds of ${duration} seconds each`);
+                    console.log(`Players: ${player1} vs ${player2}`);
+                    
+                    // // Update counter names
+                    // counterNames['Chung'] = player1;
+                    // counterNames['Hong'] = player2;
+                    
+                    // // Update the displayed labels
+                    // const chungLabel = document.querySelector('#ChungTeam .counter-label');
+                    // const hongLabel = document.querySelector('#HongTeam .counter-label');
+                    // if (chungLabel) chungLabel.textContent = player1;
+                    // if (hongLabel) hongLabel.textContent = player2;
+                    
+                    gameState.startGame(rounds, duration);
+                    startPauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                });
             }
         });
     }
-    
+
+    async function showPlayerSelectionPopup(callback) {
+        const firebaseManager = new FirebaseManager();
+        firebaseManager.initialize();
+        let playerNames = [];
+
+        let selectedPlayer1 = '';
+        let selectedPlayer2 = '';
+         try {
+            
+            const firebaseNames =  await firebaseManager.getAllPlayerNames();
+            
+            if (Array.isArray(firebaseNames) && firebaseNames.length > 0) {
+                // Merge default names with Firebase names, remove duplicates
+                playerNames = [...new Set([...playerNames, ...firebaseNames])];
+                console.log("Loaded player names from Firebase:", playerNames);
+            } else {
+                console.log("No players found in Firebase, using defaults");
+            }
+        } catch (error) {
+            console.log("Firebase error, using default player names:", error);
+        }
+        console.log("Available player names:", playerNames);
+       
+        // Create popup HTML
+        const popupHTML = `
+            <div id="playerPopup" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.7);
+                z-index: 2000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            ">
+                <div style="
+                    background: white;
+                    padding: 30px;
+                    border-radius: 10px;
+                    width: 400px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                ">
+                    <h3 style="margin-top: 0; text-align: center; color: #422d5e;">Select Players</h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Player 1 (Blue):</label>
+                        <div style="position: relative;">
+                            <input type="text" id="player1Input" placeholder="Enter player name" style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 2px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                            <div id="player1Dropdown" style="
+                                position: absolute;
+                                top: 100%;
+                                left: 0;
+                                right: 0;
+                                background: white;
+                                border: 1px solid #ddd;
+                                border-top: none;
+                                max-height: 150px;
+                                overflow-y: auto;
+                                display: none;
+                                z-index: 2001;
+                            "></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Player 2 (Red):</label>
+                        <div style="position: relative;">
+                            <input type="text" id="player2Input" placeholder="Enter player name" style="
+                                width: 100%;
+                                padding: 10px;
+                                border: 2px solid #ddd;
+                                border-radius: 5px;
+                                font-size: 16px;
+                                box-sizing: border-box;
+                            ">
+                            <div id="player2Dropdown" style="
+                                position: absolute;
+                                top: 100%;
+                                left: 0;
+                                right: 0;
+                                background: white;
+                                border: 1px solid #ddd;
+                                border-top: none;
+                                max-height: 150px;
+                                overflow-y: auto;
+                                display: none;
+                                z-index: 2001;
+                            "></div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button id="cancelBtn" style="
+                            padding: 10px 20px;
+                            background: #ccc;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">Cancel</button>
+                        <button id="okBtn" style="
+                            padding: 10px 20px;
+                            background: #422d5e;
+                            color: white;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                        ">OK</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add popup to page
+        document.body.insertAdjacentHTML('beforeend', popupHTML);
+        
+        const popup = document.getElementById('playerPopup');
+        const player1Input = document.getElementById('player1Input');
+        const player2Input = document.getElementById('player2Input');
+        const player1Dropdown = document.getElementById('player1Dropdown');
+        const player2Dropdown = document.getElementById('player2Dropdown');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const okBtn = document.getElementById('okBtn');
+
+        function checkOkButton() {
+            console.log('Checking OK button status:');
+            console.log('selectedPlayer1:', selectedPlayer1);
+            console.log('selectedPlayer2:', selectedPlayer2);
+            
+            if (selectedPlayer1 && selectedPlayer2 && selectedPlayer1 !== selectedPlayer2) {
+                okBtn.disabled = false;
+                okBtn.style.background = '#422d5e';
+                okBtn.style.color = 'white';
+                okBtn.style.cursor = 'pointer';
+                console.log('OK button enabled');
+            } else {
+                okBtn.disabled = true;
+                okBtn.style.background = '#ccc';
+                okBtn.style.color = '#666';
+                okBtn.style.cursor = 'not-allowed';
+                console.log('OK button disabled');
+            }
+        }
+        
+        // Dropdown functionality
+        function setupDropdown(input, dropdown) {
+            input.addEventListener('input', () => {
+                const value = input.value.toLowerCase();
+                const filtered = playerNames.filter(name => {
+                    if (typeof name !== 'string') {
+                        return false;
+                    }
+                    return name.toLowerCase().includes(value)
+                });
+
+                // console.log(`Filtering for "${value}":`, filtered);
+                
+                if (filtered.length > 0 && input.value.length > 0) {
+                    dropdown.innerHTML = filtered.map(name => 
+                        `<div style="padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #eee;" 
+                            onmouseover="this.style.backgroundColor='#f0f0f0'" 
+                            onmouseout="this.style.backgroundColor='white'"
+                            onclick="selectPlayer('${name}', '${input.id}')">${name}</div>`
+                    ).join('');
+                    dropdown.style.display = 'block';
+                } else if (input.value.trim() && filtered.length === 0) {
+                    // Show button to add new player if no matches found
+                    console.log(`No matches found for "${value}" - showing add option`);
+                    dropdown.innerHTML = `<div style="
+                        padding: 8px 10px; 
+                        cursor: pointer; 
+                        text-align: center;
+                        background-color: #e8f5e8;
+                        color: #2e7d32;
+                        border-bottom: 1px solid #eee;
+                    " onclick="addPlayer('${input.value.trim()}', '${input.id}')">Add "${input.value.trim()}"</div>`;
+                    dropdown.style.display = 'block'; // <- This was missing!
+                } else {
+                    dropdown.style.display = 'none';
+                }
+
+                if (input.id === 'player1Input') {
+                    selectedPlayer1 = '';
+                } else if (input.id === 'player2Input') {
+                    selectedPlayer2 = '';
+                }
+                checkOkButton();
+            });
+            
+            input.addEventListener('blur', () => {
+                setTimeout(() => dropdown.style.display = 'none', 200);
+            });
+        }
+
+        window.addPlayer = function(name, inputId) {
+            if (name.trim() === '') return;
+            
+            // Add new player to Firebase
+            const firebaseManager = new FirebaseManager();
+            firebaseManager.initialize();
+            firebaseManager.addPlayer(name).then(() => {
+                console.log(`Added new player: ${name}`);
+                
+                // Update dropdowns
+                playerNames.push(name);
+                setupDropdown(player1Input, player1Dropdown);
+                setupDropdown(player2Input, player2Dropdown);
+                
+                // Select the new player
+                selectPlayer(name, inputId);
+            }).catch(error => {
+                console.error("Error adding player:", error);
+            });
+        }
+
+        
+        // Global function for selecting from dropdown
+        window.selectPlayer = function(name, inputId) {
+            const targetInput = document.getElementById(inputId);
+            if (targetInput) {
+                targetInput.value = name;
+                
+                // Hide the correct dropdown
+                if (inputId === 'player1Input') {
+                    selectedPlayer1 = name;
+                    player1Dropdown.style.display = 'none';
+                } else if (inputId === 'player2Input') {
+                    selectedPlayer2 = name;
+                    player2Dropdown.style.display = 'none';
+                }
+
+                checkOkButton(); 
+                
+                // Focus the other input if this one is filled and the other is empty
+                if (inputId === 'player1Input'  && !selectedPlayer2) {
+                    player2Input.focus();
+                } else if (inputId === 'player2Input' && !selectedPlayer1) {
+                    player1Input.focus();
+                }
+            }
+        };
+        
+        setupDropdown(player1Input, player1Dropdown);
+        setupDropdown(player2Input, player2Dropdown);
+        
+        // Set default values
+        player1Input.value = 'Chung';
+        player2Input.value = 'Hong';
+        selectedPlayer1 = 'Chung';  // Mark as selected
+        selectedPlayer2 = 'Hong';   // Mark as selected
+        checkOkButton(); 
+        // Button events
+        cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(popup);
+            delete window.selectPlayer;
+        });
+        
+        okBtn.addEventListener('click', () => {
+            const p1 = player1Input.value.trim() || 'Player 1';
+            const p2 = player2Input.value.trim() || 'Player 2';
+            
+            document.body.removeChild(popup);
+            delete window.selectPlayer;
+            callback(p1, p2);
+        });
+        
+        // ESC key to close
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                document.body.removeChild(popup);
+                delete window.selectPlayer;
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+        
+        // Focus first input
+        setTimeout(() => player1Input.focus(), 100);
+    }
+        
     // Override the onmessage handler after connection
     const originalConnect = counterManager.connect;
     counterManager.connect = function() {

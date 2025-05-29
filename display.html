@@ -3,11 +3,35 @@
 <head>
     <title>Score Counter Display</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/9aa3e710e7.js" crossorigin="anonymous"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+        
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtWczCyLM8eQOuBShPToMJq9ZfGR4Ru-o",
+            authDomain: "scorecounter-4859a.firebaseapp.com",
+            projectId: "scorecounter-4859a",
+            storageBucket: "scorecounter-4859a.firebasestorage.app",
+            messagingSenderId: "736271081301",
+            appId: "1:736271081301:web:9e7fd7dadf396a3b6219dc",
+            measurementId: "G-SWND0NDZ2E"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make available globally
+        window.firebaseDb = db;
+    </script>
 </head>
 <body>
     <style>
@@ -31,6 +55,7 @@
         
     </style>
     <script src="counter.js"></script>
+    <script src="firebasemanager.js"></script>
     <script src="timer.js"></script>
     <script src="game-state.js"></script>
     <script src="display.js"></script>
