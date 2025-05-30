@@ -25,6 +25,22 @@ class GameStateManager {
         return this;
     }
 
+    updateCounterLabels(player1Name, player2Name) {
+        // Update the counter labels on the display
+        const chungLabel = document.querySelector('#ChungTeam .counter-label');
+        const hongLabel = document.querySelector('#HongTeam .counter-label');
+        
+        if (chungLabel) {
+            chungLabel.textContent = player1Name;
+        }
+        
+        if (hongLabel) {
+            hongLabel.textContent = player2Name;
+        }
+        
+        console.log("Counter labels updated:", player1Name, player2Name);
+    }
+
     updateRoundWinTracker() {
         // Count the number of rounds won by each player
         const winCounts = { Chung: 0, Hong: 0 };
@@ -209,28 +225,40 @@ class GameStateManager {
             console.log('Already processing round end');
             return;
         }
-        this.processingRoundEnd = true;
-        this.saveRoundScores();
-        // Determine round winner
-        const roundWinner = this.determineRoundWinner(this.currentRound);
-        this.roundWinners.push(roundWinner);
-        this.updateRoundWinTracker();
-        
-        // Announce round result
-        this.announceGameState(`Round ${this.currentRound} complete! Winner:  ${this.getPlayerName(roundWinner)}`);
-        
-        // Check if we have an overall winner
-        const overallWinner = this.checkForOverallWinner();
-        
-        if (overallWinner || this.currentRound >= this.maxRounds) {
-            // We have a winner or reached max rounds, show round summary then end game
-            this.displayRoundSummary(true, overallWinner);
-        } else {
-            // No winner yet, show round summary and continue
-            this.displayRoundSummary(false);
+        try {
+            this.processingRoundEnd = true;
+            console.log('=== HANDLING ROUND END ===');
+            
+            this.saveRoundScores();
+            
+            // Determine round winner
+            const roundWinner = this.determineRoundWinner(this.currentRound);
+            console.log('Round winner determined:', roundWinner);
+            this.roundWinners.push(roundWinner);
+            this.updateRoundWinTracker();
+            
+            // Announce round result
+            this.announceGameState(`Round ${this.currentRound} complete! Winner: ${this.getPlayerName(roundWinner)}`);
+            
+            // Check if we have an overall winner
+            const overallWinner = this.checkForOverallWinner();
+            console.log('Overall winner check:', overallWinner);
+            
+            if (overallWinner || this.currentRound >= this.maxRounds) {
+                // We have a winner or reached max rounds, show round summary then end game
+                console.log('Displaying final round summary');
+                this.displayRoundSummary(true, overallWinner);
+            } else {
+                // No winner yet, show round summary and continue
+                console.log('Displaying round summary, continuing game');
+                this.displayRoundSummary(false);
+            }
+        } catch (error) {
+            console.error('Error in handleRoundEnd:', error);
+        } finally {
+            // Always reset the flag, even if there's an error
+            this.processingRoundEnd = false;
         }
-
-        this.processingRoundEnd = false;
     }
     
     // Start the next round
@@ -470,7 +498,18 @@ class GameStateManager {
         // Display final scores table
         this.displayFinalScores(overallWinner);
     }
-    
+
+    // Add this method to clear player names
+    clearPlayerNames() {
+        this.playerNames = null;
+        
+        // Also clear global player names
+        window.player1Name = "Chung";
+        window.player2Name = "Hong";
+        
+        console.log("Player names cleared and reset to defaults");
+    }
+        
     // Display final scores
     displayFinalScores(overallWinner) {
         const totalScores = this.calculateTotalScores();
@@ -501,7 +540,13 @@ class GameStateManager {
             // Close the modal
             modal.style.display = 'none';
             document.body.removeChild(modal);
-            
+            this.clearPlayerNames();
+            this.currentRound = 1;
+            this.isGameOver = false;
+            this.scores = {};
+            this.roundWinners = [];
+            this.processingRoundEnd = false;
+            this.updateCounterLabels("Chung", "Hong");
             // Ensure we're not already in a game
             if (!this.isGameInProgress) {
                 // Prompt for rounds

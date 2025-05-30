@@ -183,6 +183,7 @@ class TimerManager {
         // Check if timer has reached zero
         if (remaining <= 0) {
             this.pause();
+            console.log("Timer has ended");
             if (this.onTimerEnd) {
                 this.onTimerEnd();
             }
@@ -302,34 +303,38 @@ class TimerManager {
             this.updateTimerDisplay(this.pausedTimeRemaining);
         }
         else if (data.type === 'timer-sync') {
-            // For full sync of timer state
-            this.isRunning = !!data.isRunning;
-            
-            if (data.duration && !isNaN(data.duration)) {
-                this.duration = data.duration;
-            }
-            
-            if (this.isRunning) {
-                if (data.startTime && !isNaN(data.startTime)) {
-                    this.startTime = data.startTime;
-                } else {
-                    this.startTime = Date.now();
-                }
-                
-                clearInterval(this.intervalId);
-                this.intervalId = setInterval(() => this.updateTimer(), 100);
+            console.log(`Handling ${data.type}:`, data);
+        this.isRunning = data.isRunning || false;
+        
+        if (this.isRunning) {
+            // Calculate start time for proper sync
+            if (typeof data.elapsedTime === 'number' && !isNaN(data.elapsedTime)) {
+                // Most accurate: use elapsed time to calculate local start time
+                this.startTime = Date.now() - data.elapsedTime;
+                console.log(`SYNC: Using elapsedTime ${data.elapsedTime}ms to calculate startTime: ${this.startTime}`);
+            } else if (data.startTime && !isNaN(data.startTime)) {
+                this.startTime = parseInt(data.startTime);
+                console.log(`SYNC: Using startTime directly: ${this.startTime}`);
             } else {
-                let pausedTime = data.pausedTimeRemaining || data.pausedTime;
-                
-                if (pausedTime && !isNaN(pausedTime)) {
-                    this.pausedTimeRemaining = pausedTime;
-                } else {
-                    this.pausedTimeRemaining = this.duration * 1000;
-                }
-                
-                clearInterval(this.intervalId);
-                this.updateTimerDisplay(this.pausedTimeRemaining);
+                this.startTime = Date.now();
+                console.log(`SYNC: No time data, using current time: ${this.startTime}`);
             }
+            
+            clearInterval(this.intervalId);
+            this.intervalId = setInterval(() => this.updateTimer(), 100);
+            this.updateTimer(); // Force immediate update
+        } else {
+            // Timer is paused
+            let pausedTime = data.pausedTimeRemaining || data.pausedTime;
+            if (pausedTime && !isNaN(pausedTime)) {
+                this.pausedTimeRemaining = pausedTime;
+            } else {
+                this.pausedTimeRemaining = this.duration * 1000;
+            }
+            
+            clearInterval(this.intervalId);
+            this.updateTimerDisplay(this.pausedTimeRemaining);
+        }
         }
     }
 }

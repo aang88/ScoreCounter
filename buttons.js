@@ -167,6 +167,13 @@ document.addEventListener('DOMContentLoaded', function() {
         this.socket.onopen = () => {
             this.connected = true;
             this.log('Connected to server');
+            
+            // IMMEDIATELY REQUEST TIMER SYNC WHEN CONNECTED
+            console.log('Requesting timer sync...');
+            this.socket.send(JSON.stringify({
+                type: 'timer-sync-request'
+            }));
+            
             if (this.onConnectionChange) {
                 this.onConnectionChange(true);
             }

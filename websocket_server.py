@@ -55,6 +55,24 @@ async def counter_server(websocket):
         
         # Send initial timer state
         await websocket.send(json.dumps(timer_state))
+        if timer_state.get("isRunning", False):
+            current_time = time.time() * 1000  # Current time in milliseconds
+            start_time = timer_state.get("startTime", current_time)
+            elapsed_time = current_time - start_time
+            duration = timer_state.get("duration", 60) * 1000  # Convert to ms
+            
+            # Send a more accurate sync message with current elapsed time
+            sync_message = {
+                "type": "timer-sync",
+                "isRunning": True,
+                "startTime": start_time,
+                "elapsedTime": elapsed_time,
+                "duration": timer_state.get("duration", 60),
+                "pausedTime": 0,
+                "pausedTimeRemaining": max(0, duration - elapsed_time)
+            }
+            print(f"Sending timer sync with elapsed time: {elapsed_time}ms")
+            await websocket.send(json.dumps(sync_message))
         
         async for message in websocket:
             print(f"Received message from {client_info}: {message}")
@@ -202,7 +220,30 @@ async def counter_server(websocket):
                 
             elif data.get("type") == "timer-sync-request":
                 # Send current timer state to the client
-                await websocket.send(json.dumps(timer_state))
+                if timer_state.get("isRunning", False):
+                    # Calculate current elapsed time for running timer
+                    current_time = time.time() * 1000
+                    start_time = timer_state.get("startTime", current_time)
+                    elapsed_time = current_time - start_time
+                    duration = timer_state.get("duration", 60) * 1000
+                    
+                    sync_response = {
+                        "type": "timer-sync",
+                        "isRunning": True,
+                        "startTime": start_time,
+                        "elapsedTime": elapsed_time,
+                        "duration": timer_state.get("duration", 60),
+                        "pausedTime": 0,
+                        "pausedTimeRemaining": max(0, duration - elapsed_time)
+                    }
+                    print(f"Sending running timer sync: {elapsed_time}ms elapsed")
+                else:
+                    # Timer is paused or stopped
+                    sync_response = timer_state.copy()
+                    sync_response["type"] = "timer-sync"
+                    print(f"Sending paused timer sync: {sync_response}")
+                
+                await websocket.send(json.dumps(sync_response))
                 
             elif data.get("type") == "ping":
                 # Just respond with a pong to keep the connection alive
@@ -267,7 +308,7 @@ def update_player_match_history(player_name, opponent_name, match_id, game_winne
             player_ref = db.collection('players').document(doc.id)
             
             # Determine if this player won
-            player_won = game_winner == player_color
+            player_won = game_winner.lower() == player_color.lower()
             
             # Create match summary for player record
             match_summary = {
@@ -333,6 +374,8 @@ def global_timer_update(new_state):
     # Ensure we have valid type
     if 'type' not in timer_state:
         timer_state['type'] = 'timer-sync'
+
+
 
 async def broadcast(message):
     if connected_clients:
