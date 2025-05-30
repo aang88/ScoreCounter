@@ -210,9 +210,25 @@ class TimerManager {
 
     getCurrentTime() {
         //Get the current timer time formatted as 00:00
-        if (!this.isRunning) {
+        if (this.isRunning) {
+            const elapsed = Date.now() - this.startTime;
+            const remaining = Math.max(0, this.duration * 1000 - elapsed);
+            return this.formatTime(remaining);
+        } else {
             return this.formatTime(this.pausedTimeRemaining || this.duration * 1000);
         }
+    }
+
+    // Add this method to the TimerManager class (around line 200, before getCurrentTime)
+    formatTime(timeInMs) {
+        if (timeInMs === null || timeInMs === undefined || isNaN(timeInMs)) {
+            return "00:00";
+        }
+        
+        const totalSeconds = Math.ceil(Math.max(0, timeInMs) / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
     
     // Handle timer messages from the server
