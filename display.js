@@ -604,9 +604,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (inputId === 'player1Input') {
                     selectedPlayer1 = name;
                     player1Dropdown.style.display = 'none';
+                    sendSocketMessage('select-player', { chung: name });
                 } else if (inputId === 'player2Input') {
                     selectedPlayer2 = name;
                     player2Dropdown.style.display = 'none';
+                    sendSocketMessage('select-player', { hong: name});
                 }
 
                 checkOkButton(); 
@@ -745,6 +747,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 100);
     };
+
+    sendSocketMessage = (type, data) => {
+        if (counterManager.socket && counterManager.socket.readyState === WebSocket.OPEN) {
+            const message = JSON.stringify({ type, ...data });
+            console.log("Sending message:", message);
+            counterManager.socket.send(message);
+        } else {
+            console.error("WebSocket is not open. Cannot send message:", type, data);
+        }
+    }
     
     // Handle connection changes
     counterManager.onConnectionChange = (connected) => {

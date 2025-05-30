@@ -21,6 +21,8 @@ timer_state = {
 }
 match_replay_holder = []
 round_count = 1
+chung_name = "Unknown"  # Add this line
+hong_name = "Unknown"
 cred = credentials.Certificate({
     "type": "service_account",
     "project_id": os.getenv('FIREBASE_PROJECT_ID'),
@@ -35,7 +37,7 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 async def counter_server(websocket):
-    global timer_state,round_count, match_replay_holder
+    global timer_state,round_count, match_replay_holder,chung_name, hong_name
     client_info = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
     print(f"New client connected: {client_info}")
     
@@ -215,27 +217,82 @@ async def counter_server(websocket):
                 game_winner = data.get("game_winner", "unknown")
                 final_score = data.get("scores", "0-0")
 
-               
-                round_count = 1
-                match_replay_holder.clear()
-
-                #Append mach replay data to Firestore
-                db.collection('match_replays').add({
+                match_doc = {
                     'game_winner': game_winner,
                     'final_score': final_score,
                     'replay_data': json_replay,
+                    'chung': chung_name,
+                    'hong': hong_name,
                     'timestamp': firestore.SERVER_TIMESTAMP
-                })
-              
+                }
                 
+                # Add match to the match_replays collection
+                match_ref = db.collection('match_replays').add(match_doc)
+                match_id = match_ref[1].id
+
+                try:
+                    # Update both players' match histories
+                    update_player_match_history(chung_name, hong_name, match_id, game_winner, final_score, 'chung')
+                    update_player_match_history(hong_name, chung_name, match_id, game_winner, final_score, 'hong')
+                except Exception as e:
+                    print(f"Error updating player match history: {e}")
                 
-                
+
+                round_count = 1
+                match_replay_holder.clear()
+
+            elif data.get("type") == "select-player":
+                if "hong" in data:
+                    hong_name = data.get("hong")
+                    print(f"Hong player selected: {hong_name}")
+                if "chung" in data:
+                    chung_name = data.get("chung")
+                    print(f"Chung player selected: {chung_name}")
+                print(f"Selected players - Hong: {hong_name}, Chung: {chung_name}")
+               
     except Exception as e:
         print(f"Error handling client {client_info}: {e}")
     finally:
         connected_clients.remove(websocket)
         print(f"Client disconnected: {client_info}")
 
+def update_player_match_history(player_name, opponent_name, match_id, game_winner, final_score, player_color):
+    try:
+        # Find player document
+        player_query = db.collection('players').where('name', '==', player_name).limit(1)
+        player_docs = player_query.stream()
+        
+        for doc in player_docs:
+            # Get player doc reference
+            player_ref = db.collection('players').document(doc.id)
+            
+            # Determine if this player won
+            player_won = game_winner == player_color
+            
+            # Create match summary for player record
+            match_summary = {
+                'match_id': match_id,
+                'opponent': opponent_name,
+                'result': 'win' if player_won else 'loss',
+                'score': final_score
+            }
+            
+            # Update player document - add match to matches array
+            player_ref.update({
+                'matches': firestore.ArrayUnion([match_summary]),
+                # Update wins or losses count
+                'wins': firestore.Increment(1) if player_won else 0,
+                'losses': firestore.Increment(1) if not player_won else 0
+            })
+            print(f"Updated {player_name}'s match history")
+            return True
+    
+        print(f"Player {player_name} not found in database")
+        return False
+    except Exception as e:
+        print(f"Error updating {player_name}'s match history: {e}")
+        return False
+    
 # In your global_timer_update function
 def global_timer_update(new_state):
     global timer_state
