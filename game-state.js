@@ -13,7 +13,10 @@ class GameStateManager {
         this.duration = 60; // Default round duration in seconds
         
         // Bind timer end event
-        this.timerManager.setOnTimerEnd(() => this.handleRoundEnd());
+        this.timerManager.setOnTimerEnd(() => {
+            console.log('Timer ended - calling handleRoundEnd');
+            this.handleRoundEnd();
+        });
     }
     
     // Set the element to display round information
@@ -162,9 +165,17 @@ class GameStateManager {
     // Handle round end
     handleRoundEnd() {
         // Prevent multiple round end calls
-        if (!this.isGameInProgress) return;
+        if (!this.isGameInProgress || this.isGameOver) {
+            console.log('Ignoring round end - game not in progress or already over');
+            return;
+        }
 
-        // Save scores for this round
+        // Add flag to prevent multiple calls
+        if (this.processingRoundEnd) {
+            console.log('Already processing round end');
+            return;
+        }
+        this.processingRoundEnd = true;
         this.saveRoundScores();
         
         // Determine round winner
@@ -172,7 +183,7 @@ class GameStateManager {
         this.roundWinners.push(roundWinner);
         
         // Announce round result
-        this.announceGameState(`Round ${this.currentRound} complete! Winner: ${roundWinner}`);
+        this.announceGameState(`Round ${this.currentRound} complete! Winner:  ${this.getPlayerName(roundWinner)}`);
         
         // Check if we have an overall winner
         const overallWinner = this.checkForOverallWinner();
@@ -184,6 +195,8 @@ class GameStateManager {
             // No winner yet, show round summary and continue
             this.displayRoundSummary(false);
         }
+
+        this.processingRoundEnd = false;
     }
     
     // Start the next round
@@ -194,7 +207,6 @@ class GameStateManager {
             return;
         }
 
-        this.resetAllCounters();
 
         this.currentRound++;
         
@@ -228,6 +240,8 @@ class GameStateManager {
             }));
         }
     }
+
+    
     
     // Announce game state changes
     announceGameState(message) {
@@ -250,6 +264,35 @@ class GameStateManager {
             announcementElement.style.opacity = '0';
         }, 3000);
     }
+
+    getPlayerName(color) {
+        // Check if we're getting a player name directly from overrides
+        if (this.playerNames && this.playerNames[color]) {
+            return this.playerNames[color];
+        }
+        
+        // Get player names from global scope (fallback)
+        if (window.player1Name && window.player2Name) {
+            if (color === 'Chung') {
+                return window.player1Name;
+            } else if (color === 'Hong') {
+                return window.player2Name;
+            }
+        }
+        
+        // Last resort fallback to color name
+        return color;
+    }
+
+    // Add this method to GameStateManager to set player names directly:
+    setPlayerNames(chung, hong) {
+        this.playerNames = {
+            'Chung': chung,
+            'Hong': hong
+        };
+        console.log("Game state player names set:", this.playerNames);
+        return this;
+    }
     
     // Display round summary
     displayRoundSummary(isFinalRound, overallWinner = null) {
@@ -270,7 +313,7 @@ class GameStateManager {
         // Round winner announcement
         const winnerAnnouncement = document.createElement('div');
         winnerAnnouncement.className = 'winner-announcement';
-        winnerAnnouncement.textContent = `Round Winner: ${roundWinner}`;
+        winnerAnnouncement.textContent = `Round Winner: ${this.getPlayerName(roundWinner)}`;
         
         // Match standings
         const standings = document.createElement('div');
@@ -286,7 +329,7 @@ class GameStateManager {
         // Create standings text
         let standingsText = "Match Standing: ";
         for (const [team, wins] of Object.entries(winCounts)) {
-            standingsText += `${team} (${wins} wins) `;
+            standingsText += `${this.getPlayerName(team)} (${wins} wins) `;
         }
         standings.textContent = standingsText;
         
@@ -300,7 +343,8 @@ class GameStateManager {
             if (team === roundWinner) {
                 scoreItem.classList.add('winner');
             }
-            scoreItem.innerHTML = `<span class="team-name">${team}</span>: <span class="team-score">${score}</span>`;
+            const playerName = this.getPlayerName(team);
+            scoreItem.innerHTML = `<span class="team-name">${playerName}</span>: <span class="team-score">${score}</span>`;
             scoresList.appendChild(scoreItem);
         }
         
@@ -341,7 +385,7 @@ class GameStateManager {
 
         this.isGameOver = true;
         this.isGameInProgress = false; // Mark game as not in progress
-        this.timerManager.pause();
+        //this.timerManager.pause();
         
         // If no winner was passed, calculate final scores and determine winner
         if (!overallWinner) {
@@ -405,7 +449,7 @@ class GameStateManager {
         
         const winnerAnnouncement = document.createElement('div');
         winnerAnnouncement.className = 'final-winner-announcement';
-        winnerAnnouncement.textContent = `Match Winner: ${overallWinner}`;
+        winnerAnnouncement.textContent = `Match Winner: ${this.getPlayerName(overallWinner)}`;
         
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close-button';
@@ -485,7 +529,8 @@ class GameStateManager {
             
             // Team name cell
             const teamCell = document.createElement('td');
-            teamCell.textContent = team;
+            const playerName = this.getPlayerName(team);
+            teamCell.textContent = playerName;
             teamCell.className = team === overallWinner ? 'winner' : '';
             row.appendChild(teamCell);
             

@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     counterIds.forEach(id => {
         counterNames[id] = urlParams.get('name-' + id) || id;
     });
-    
+    window.player1Name = "Chung";
+    window.player2Name = "Hong";
    
     // Create game controls if they don't exist
     let gameControls = document.getElementById('gameControls');
@@ -29,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         gameControls.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
         gameControls.style.marginRight = 'auto';
         gameControls.style.marginLeft = 'auto';
-        gameControls.style.gap = '200px';
+        gameControls.style.gap = '800px';
         
         const newGameButton = document.createElement('button');
         newGameButton.id = 'newGameButton';
@@ -43,15 +44,22 @@ document.addEventListener('DOMContentLoaded', function() {
         newGameButton.style.borderRadius = '5px';
         newGameButton.style.cursor = 'pointer';
         newGameButton.style.fontSize = '16px';
+        // newGameButton.style.marginLeft= '20px';
 
         const logo = document.createElement('div');
-        logo.id = 'roundInfo';
+        logo.id = 'logo';
         logo.style.fontFamily = 'Bebas Neue, sans-serif';
         logo.textContent = 'Western Taekwondo';
         logo.style.fontSize = '36px';
         logo.style.fontWeight = 'bold';
         logo.style.textAlign = 'center';
-        logo.style.marginLeft = '60px';
+        logo.style.display = 'flex';
+        logo.style.justifyContent = 'center';
+        logo.style.alignItems = 'center';
+        logo.style.position = 'absolute';
+        logo.style.left = '50%';
+        logo.style.transform = 'translateX(-50%)';
+        logo.style.color = '#fff';
         logo.style.color = '#fff';
         
         const roundInfo = document.createElement('div');
@@ -61,6 +69,12 @@ document.addEventListener('DOMContentLoaded', function() {
         roundInfo.style.fontSize = '18px';
         roundInfo.style.fontWeight = 'bold';
         roundInfo.style.color = '#fff';
+        roundInfo.style.width = '300px'; // Set a fixed width
+        roundInfo.style.textAlign = 'center';
+        roundInfo.style.display = 'flex';
+        roundInfo.style.justifyContent = 'center';
+        roundInfo.style.alignItems = 'center';
+        roundInfo.style.minHeight = '40px'; // Prevent height changes
         
         gameControls.appendChild(newGameButton);
         gameControls.appendChild(logo);
@@ -240,6 +254,21 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("CounterManager WebSocket:", counterManager.socket);
     counterManager.connect();
 
+    window.addEventListener('beforeunload', function () {
+    if (counterManager.socket && counterManager.socket.readyState === WebSocket.OPEN) {
+            // Send reset-counters message
+            counterManager.socket.send(JSON.stringify({
+                type: 'reset-counters'
+            }));
+
+            // Send timer-reset message
+            counterManager.socket.send(JSON.stringify({
+                type: 'timer-reset',
+                duration: 60 // Default duration in seconds
+            }));
+        }
+    });
+
     // Set up debug logging
     counterManager.setDebugElement(debug);
     
@@ -271,9 +300,10 @@ document.addEventListener('DOMContentLoaded', function() {
         counterBox.style.fontStyle = '24px';
         counterBox.style.marginBottom = '30px';
         
+        console.log("names", player1Name, player2Name);
         const label = document.createElement('div');
         label.className = 'counter-label';
-        label.textContent = counterNames[id];
+        label.textContent = id === 'Hong' ? player2Name : player1Name;
         label.style.fontSize = '48px';
         label.style.fontWeight = 'bold';
         label.style.color = id === 'Hong' ? '#ea4335' : '#4285f4';
@@ -292,6 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
         value.style.lineHeight = '1'; // Tighten line height
         value.style.margin = '0'; // Remove any margin
         value.style.padding = '0'; // Remove any padding    
+
         
         counterValues[id] = value;
         
@@ -603,14 +634,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Hide the correct dropdown
                 if (inputId === 'player1Input') {
                     selectedPlayer1 = name;
+                    player1Name = name;
+                    console.log('Set player1Name:', player1Name);
                     player1Dropdown.style.display = 'none';
                     sendSocketMessage('select-player', { chung: name });
                 } else if (inputId === 'player2Input') {
                     selectedPlayer2 = name;
+                    player2Name = name;
+                    console.log('Set player2Name:', player2Name);
                     player2Dropdown.style.display = 'none';
                     sendSocketMessage('select-player', { hong: name});
                 }
-
+                updateCounterLabels();
                 checkOkButton(); 
                 
                 // Focus the other input if this one is filled and the other is empty
@@ -640,7 +675,7 @@ document.addEventListener('DOMContentLoaded', function() {
         okBtn.addEventListener('click', () => {
             const p1 = player1Input.value.trim() || 'Player 1';
             const p2 = player2Input.value.trim() || 'Player 2';
-            
+            updateCounterLabels();
             document.body.removeChild(popup);
             delete window.selectPlayer;
             callback(p1, p2);
@@ -669,6 +704,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Replace the message handler after a small delay to ensure socket is created
         setTimeout(() => {
             if (this.socket) {
+
+                
                 // Store the original handler
                 const originalOnMessage = this.socket.onmessage;
                 
@@ -756,6 +793,15 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.error("WebSocket is not open. Cannot send message:", type, data);
         }
+    }
+
+    function updateCounterLabels() {
+        console.log("Updating counter labels with:", player1Name, player2Name);
+        const chungLabel = document.querySelector('#ChungTeam .counter-label');
+        const hongLabel = document.querySelector('#HongTeam .counter-label'); 
+        
+        if (chungLabel) chungLabel.textContent = player1Name || 'Chung';
+        if (hongLabel) hongLabel.textContent = player2Name || 'Hong';
     }
     
     // Handle connection changes
