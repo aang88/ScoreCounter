@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     window.player1Name = "Chung";
     window.player2Name = "Hong";
-   
+
+    
     // Create game controls if they don't exist
     let gameControls = document.getElementById('gameControls');
     if (!gameControls) {
@@ -299,7 +300,35 @@ document.addEventListener('DOMContentLoaded', function() {
         counterBox.style.fontFamily = 'Bebas Neue, sans-serif';
         counterBox.style.fontStyle = '24px';
         counterBox.style.marginBottom = '30px';
+        counterBox.style.position = 'relative'; 
+
+        // Add round win tracker
+        const roundWinTracker = document.createElement('div');
+        roundWinTracker.className = 'round-win-tracker';
+        roundWinTracker.style.display = 'flex';
+        roundWinTracker.style.justifyContent = 'center';
+        roundWinTracker.style.gap = '10px';
+        roundWinTracker.style.marginBottom = '10px';
+        roundWinTracker.style.position = 'absolute';
+        roundWinTracker.style.top = '10px'; // Position above the value box
+        roundWinTracker.style.left = '50%';
+        roundWinTracker.style.transform = 'translateX(-50%)';
         
+
+        // Add glowing dots (default to empty)
+        for (let i = 0; i < 3; i++) { // Assuming best of 3 rounds
+            const dot = document.createElement('div');
+            dot.className = 'round-dot';
+            dot.style.width = '15px';
+            dot.style.height = '15px';
+            dot.style.borderRadius = '50%';
+            dot.style.backgroundColor = '#ccc'; // Default color for unlit dots
+            dot.style.boxShadow = '0 0 5px rgba(0, 0, 0, 0.3)';
+            roundWinTracker.appendChild(dot);
+        }
+
+        counterBox.appendChild(roundWinTracker);
+            
         console.log("names", player1Name, player2Name);
         const label = document.createElement('div');
         label.className = 'counter-label';
@@ -400,6 +429,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    
 
     async function showPlayerSelectionPopup(callback) {
         const firebaseManager = new FirebaseManager();

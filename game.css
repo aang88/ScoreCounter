@@ -254,6 +254,10 @@
     animation: pulse 1s infinite;
 }
 
+.round-dot {
+    transition: all 0.3s ease;
+}
+
 @keyframes pulse {
     0% { opacity: 1; }
     50% { opacity: 0.5; }

@@ -127,6 +127,7 @@ class TimerManager {
         
         // Notify server if websocket is available
         if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+            console.log("Pausing timer, remaining time:", this.pausedTimeRemaining);
             this.websocket.send(JSON.stringify({
                 type: 'timer-pause',
                 pausedTimeRemaining: this.pausedTimeRemaining,

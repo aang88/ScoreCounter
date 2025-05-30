@@ -24,6 +24,43 @@ class GameStateManager {
         this.roundInfoElement = element;
         return this;
     }
+
+    updateRoundWinTracker() {
+        // Count the number of rounds won by each player
+        const winCounts = { Chung: 0, Hong: 0 };
+        this.roundWinners.forEach(winner => {
+            if (winner === 'Chung' || winner === 'Hong') {
+                winCounts[winner]++;
+            }
+        });
+        const winsNeeded = Math.ceil(this.maxRounds / 2);
+        // Update the dots for each player
+        ['Chung', 'Hong'].forEach(player => {
+            const tracker = document.querySelector(`#${player}Team .round-win-tracker`);
+            if (tracker) {
+                tracker.innerHTML = '';
+               
+                for (let i = 0; i < winsNeeded; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'round-dot';
+                    dot.style.width = '15px';
+                    dot.style.height = '15px';
+                    dot.style.borderRadius = '50%';
+                    dot.style.boxShadow = '0 0 5px rgba(0, 0, 0, 0.3)';
+                    
+                    // Light up the dot if this win has been achieved
+                    if (i < (winCounts[player] || 0)) {
+                        dot.style.backgroundColor = player === 'Hong' ? '#ea4335' : '#4285f4';
+                        dot.style.boxShadow = `0 0 10px ${player === 'Hong' ? '#ea4335' : '#4285f4'}`;
+                    } else {
+                        dot.style.backgroundColor = '#ccc';
+                    }
+                    
+                    tracker.appendChild(dot);
+                }
+            }
+        });
+    }
     
     // Update round information display
     updateRoundInfo() {
@@ -38,17 +75,12 @@ class GameStateManager {
             // Format as "Round X - Team A: 1, Team B: 0"
             let infoText = `Round ${this.currentRound}`;
             
-            if (Object.keys(winCounts).length > 0) {
-                infoText += " - ";
-                for (const [team, wins] of Object.entries(winCounts)) {
-                    infoText += `${team}: ${wins}, `;
-                }
-                infoText = infoText.slice(0, -2); // Remove trailing comma and space
-            }
             
             this.roundInfoElement.textContent = infoText;
         }
     }
+
+    
     
     // Save scores for the current round
     saveRoundScores() {
@@ -142,13 +174,14 @@ class GameStateManager {
         // Reset timer
         this.timerManager.reset();
         
-        
+
         
         // Start timer for first round
         this.timerManager.start();
         
         // Update round info
         this.updateRoundInfo();
+        this.updateRoundWinTracker();
         
         // Announce game start
         this.announceGameState(`Game started! Best of ${this.maxRounds} rounds`);
@@ -170,6 +203,7 @@ class GameStateManager {
             return;
         }
 
+
         // Add flag to prevent multiple calls
         if (this.processingRoundEnd) {
             console.log('Already processing round end');
@@ -177,10 +211,10 @@ class GameStateManager {
         }
         this.processingRoundEnd = true;
         this.saveRoundScores();
-        
         // Determine round winner
         const roundWinner = this.determineRoundWinner(this.currentRound);
         this.roundWinners.push(roundWinner);
+        this.updateRoundWinTracker();
         
         // Announce round result
         this.announceGameState(`Round ${this.currentRound} complete! Winner:  ${this.getPlayerName(roundWinner)}`);
@@ -212,7 +246,7 @@ class GameStateManager {
         
         // Reset counters for new round
         this.resetAllCounters();
-        
+       
         // Reset and start timer
         this.timerManager.reset();
         this.timerManager.start();
@@ -267,9 +301,13 @@ class GameStateManager {
 
     getPlayerName(color) {
         // Check if we're getting a player name directly from overrides
+        console.log("Getting player name for color:", color);
+
         if (this.playerNames && this.playerNames[color]) {
             return this.playerNames[color];
         }
+
+        console.log("No player name found for color:", color);
         
         // Get player names from global scope (fallback)
         if (window.player1Name && window.player2Name) {
