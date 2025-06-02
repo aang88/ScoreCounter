@@ -214,4 +214,35 @@ class FirebaseManager {
             return false;
         }
     }
+
+    async getPlayerStats(playerName) {
+        if (!this.isInitialized) {
+            console.warn("Firebase not initialized");
+            return null;
+        }
+        
+        try {
+            const { collection, query, where, getDocs } = 
+                await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
+            
+            const q = query(
+                collection(this.db, 'players'),
+                where('name', '==', playerName)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                console.warn(`No player found with name: ${playerName}`);
+                return null;
+            }
+            
+            const playerData = querySnapshot.docs[0].data();
+            console.log(`📊 Retrieved stats for player ${playerName}`);
+            return playerData;
+            
+        } catch (error) {
+            console.error("Error getting player stats:", error);
+            return null;
+        }
+    }
 }
