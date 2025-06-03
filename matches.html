@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Score Counter - Matches</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+        
+        // Your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtWczCyLM8eQOuBShPToMJq9ZfGR4Ru-o",
+            authDomain: "scorecounter-4859a.firebaseapp.com",
+            projectId: "scorecounter-4859a",
+            storageBucket: "scorecounter-4859a.firebasestorage.app",
+            messagingSenderId: "736271081301",
+            appId: "1:736271081301:web:9e7fd7dadf396a3b6219dc",
+            measurementId: "G-SWND0NDZ2E"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make available globally
+        window.firebaseDb = db;
+        
+    </script>
+    <link rel="stylesheet" href="matches.css">
+</head>
+<body>
+    <header>
+        <h1>Score Counter - Matches</h1>
+    </header>
+    <main>
+        <div id="matchList"></div>
+    </main>
+    <script src="matches.js"></script>
+    <script src="match.js"></script>
+    <script src="firebasemanager.js"></script>
+</body>
+</html>

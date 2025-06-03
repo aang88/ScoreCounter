@@ -245,4 +245,63 @@ class FirebaseManager {
             return null;
         }
     }
+
+    async getMatchStats(matchId) {
+        if (!this.isInitialized) {
+            console.warn("Firebase not initialized");
+            return null;
+        }
+        try {
+            const { doc, getDoc } = 
+                await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
+            
+            const matchDoc = doc(this.db, 'match_replays', matchId);
+            const matchSnapshot = await getDoc(matchDoc);
+            
+            if (!matchSnapshot.exists()) {
+                console.warn(`No match found with ID: ${matchId}`);
+                return null;
+            }
+            
+            const matchData = matchSnapshot.data();
+            console.log(`📊 Retrieved stats for match ${matchId}`);
+            return matchData;
+            
+        } catch (error) {
+            console.error("Error getting match stats:", error);
+            return null;
+        }
+    }
+    async getAllMatches() {
+        if (!this.isInitialized) {
+            console.warn("Firebase not initialized");
+            return [];
+        }
+        
+        try {
+            const { collection, getDocs,orderBy,query } = 
+                await import('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js');
+            const q = query(
+                collection(this.db, 'match_replays'),
+                orderBy('timestamp', 'desc')
+            );
+            const matchesSnapshot = await getDocs(q);
+            const matches = [];
+            
+            matchesSnapshot.forEach((doc) => {
+                matches.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+            
+            console.log(`📊 Retrieved ${matches.length} matches from Firebase`);
+            return matches;
+            
+        } catch (error) {
+            console.error("Error getting all matches:", error);
+            return [];
+        }
+    }
+
 }
