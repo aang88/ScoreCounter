@@ -6,6 +6,7 @@
     <!-- <link rel="stylesheet" href="players.css"> -->
     <script src="https://kit.fontawesome.com/9aa3e710e7.js" crossorigin="anonymous"></script>
     <script src="players.js"></script>
+    <script src="match.js"></script>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
         import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
@@ -65,4 +66,12 @@
         flex-wrap: wrap;
         gap: 15px;
     "></div>
+    <div id="recentMatches" style="
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    "></div>
+    <div id="match-replay"></div>
+    
 </body>

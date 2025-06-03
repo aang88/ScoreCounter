@@ -166,12 +166,72 @@ class MatchCard {
                 padding: 5px 0; 
                 border-bottom: 1px solid #eee;
             ">
-                <span class="round">Round ${event.round}</span>
-                <span class="player">${this.getPlayerName(event.player)}</span>
+                <span class="round">Round ${event.round} </span>
+                <span class="player">${this.getPlayerName(event.player)} </span>
                 <span class="technique">${event.technique}</span>
                 <span class="time">${new Date(event.timestamp).toLocaleTimeString()}</span>
             </div>
         `).join('');
+    }
+
+
+    createStandaloneReplaySection(matchData) {
+        // Temporarily set this.matchData so existing methods work
+        const originalMatchData = this.matchData;
+        this.matchData = matchData;
+
+        // Create the replay section container
+        const replaySection = document.createElement('div');
+        replaySection.className = 'standalone-replay-section';
+        replaySection.style.cssText = `
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            margin: 15px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        `;
+
+        // Create header using existing methods
+        const header = document.createElement('div');
+        header.style.cssText = `
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        `;
+        header.innerHTML = `
+            <h4 style="margin: 0 0 10px 0;">Match Replay</h4>
+            <p>Match: ${matchData.chung} vs ${matchData.hong}</p>
+            <p>Winner: ${this.getWinnerName(matchData.game_winner)}</p>
+            <p>Score: ${matchData.final_score.Chung} - ${matchData.final_score.Hong}</p>
+            <p>Date: ${this.formatTimestamp(matchData.timestamp)}</p>
+        `;
+
+        // Create content using existing methods
+        const content = document.createElement('div');
+        content.style.cssText = `max-height: 400px; overflow-y: auto; padding: 15px;`;
+
+        try {
+            if (matchData.replay_data) {
+                const replayEvents = JSON.parse(matchData.replay_data);
+                // Use your existing formatReplayData method!
+                content.innerHTML = this.formatReplayData(replayEvents);
+            } else {
+                content.innerHTML = '<p>No replay data available</p>';
+            }
+        } catch (error) {
+            console.error('Error loading replay data:', error);
+            content.innerHTML = '<p>Error loading replay data</p>';
+        }
+
+        // Restore original matchData
+        this.matchData = originalMatchData;
+
+        // Combine everything
+        replaySection.appendChild(header);
+        replaySection.appendChild(content);
+
+        return replaySection;
     }
 
 

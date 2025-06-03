@@ -147,10 +147,123 @@ document.addEventListener('DOMContentLoaded', function(){
                     });
                     
                     playerCardsContainer.appendChild(card);
+                    displayRecentMatches(stats);
                 } else {
                     console.warn(`No stats available for ${playerName}`);
                 }
             });
+        }
+
+        
+        
+        async function displayRecentMatches(stats) {
+            const matches = stats.matches || [];
+            const recentMatchesContainer = document.getElementById('recentMatches');
+            
+            if (!recentMatchesContainer) {
+                console.error('recentMatches container not found');
+                return;
+            }
+            
+            // Clear existing matches
+            recentMatchesContainer.innerHTML = '<h3>Recent Matches</h3>';
+            
+            const firebaseManager = new FirebaseManager();
+            await firebaseManager.initialize();
+            
+            for (const matchMedia of matches) {
+                // Create main match card container
+                const matchContainer = document.createElement('div');
+                matchContainer.className = 'match-container';
+                
+                // Create the clickable match card
+                const matchCard = document.createElement('div');
+                matchCard.className = 'match-card';
+                matchCard.style.cssText = `
+                    background: white;
+                    border: 2px solid #ddd;
+                    border-radius: 10px;
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                `;
+                matchCard.innerHTML = `
+                    <h4 style="margin: 0; color: #333;">Match ID: ${matchMedia.match_id}</h4>
+                    <p style="margin: 5px 0; color: #666;"><strong>Opponent:</strong> ${matchMedia.opponent}</p>
+                    <p style="margin: 5px 0; color: #666;"><strong>Score:</strong> ${matchMedia.score.Chung} - ${matchMedia.score.Hong}</p>
+                    <p style="margin: 5px 0; color: ${matchMedia.result === 'win' ? '#28a745' : '#dc3545'};"><strong>Result:</strong> ${matchMedia.result.toUpperCase()}</p>
+                    <div class="expand-arrow" style="float: right; font-weight: bold; color: #666;">▼</div>
+                `;
+
+                // Create the hidden replay section
+                const replaySection = document.createElement('div');
+                replaySection.className = 'replay-section';
+                replaySection.style.cssText = `
+                    display: none;
+                    background: #f8f9fa;
+                    border: 1px solid #ddd;
+                    border-top: none;
+                    border-radius: 0 0 10px 10px;
+                    padding: 15px;
+                `;
+                replaySection.innerHTML = '<div class="loading">Loading replay data...</div>';
+
+                // Add click event to toggle replay
+                matchCard.addEventListener('click', async () => {
+                    const arrow = matchCard.querySelector('.expand-arrow');
+                    
+                    if (replaySection.style.display === 'none') {
+                        // Show replay section
+                        replaySection.style.display = 'block';
+                        arrow.textContent = '▲';
+                        
+                        // Load replay data if not already loaded
+                        if (replaySection.innerHTML.includes('Loading replay data...')) {
+                            try {
+                                // Get full match data from Firebase
+                                const fullMatchData = await firebaseManager.getMatchStats(matchMedia.match_id);
+                                
+                                if (fullMatchData) {
+                                    // Use your existing MatchCard methods
+                                    const tempMatchCard = new MatchCard(matchMedia.match_id, firebaseManager);
+                                    const standaloneReplay = tempMatchCard.createStandaloneReplaySection(fullMatchData);
+                                    
+                                    // Replace loading content with actual replay
+                                    replaySection.innerHTML = '';
+                                    replaySection.appendChild(standaloneReplay);
+                                } else {
+                                    replaySection.innerHTML = '<p>No replay data available</p>';
+                                }
+                            } catch (error) {
+                                console.error('Error loading replay:', error);
+                                replaySection.innerHTML = '<p>Error loading replay data</p>';
+                            }
+                        }
+                    } else {
+                        // Hide replay section
+                        replaySection.style.display = 'none';
+                        arrow.textContent = '▼';
+                    }
+                });
+
+                // Add hover effects
+                matchCard.addEventListener('mouseenter', () => {
+                    matchCard.style.transform = 'translateY(-2px)';
+                    matchCard.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                });
+                
+                matchCard.addEventListener('mouseleave', () => {
+                    matchCard.style.transform = 'translateY(0)';
+                    matchCard.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                });
+
+                // Append everything to container
+                matchContainer.appendChild(matchCard);
+                matchContainer.appendChild(replaySection);
+                recentMatchesContainer.appendChild(matchContainer);
+            }
         }
 
     
