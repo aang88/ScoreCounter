@@ -1,0 +1,64 @@
+/* Styles for multiple counter buttons page */
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 500px;
+    margin-top: 20px;
+}
+
+.team-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adds some space between elements */
+}
+
+.counter-button {
+    background-color: #4285f4; /* Blue color for add button */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.counter-button:hover {
+    background-color: #3367d6; /* Slightly darker blue on hover */
+}
+
+.subtract-button {
+    background-color: #ea4335; /* Red color for subtract button */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.subtract-button:hover {
+    background-color: #c5221f; /* Darker red on hover */
+}
+
+.counter-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 10px;
+}
+.counter-value {
+    font-size: 18px;
+    margin-top: 8px;
+}
+
+#button1.counter-button, #button1body.counter-button, #button1spin.counter-button, #subtractButton1.counter-button {
+    background-color: #ea4335; /* Red */
+    color: white;
+}
+
+/* Specific styles for Blue buttons */
+#button2.counter-button, #button2body.counter-button, #button2spin.counter-button {
+    background-color: #4285f4; /* Blue */
+    color: white;
+}

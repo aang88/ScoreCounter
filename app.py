@@ -39,20 +39,13 @@ else:
 os.chdir(app_dir)
 
 # HTTP Server setup
-class ScoreCounterHTTPServer(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self, daemon=True)
-        self.httpd = None
-        
-    def run(self):
-        handler = http.server.SimpleHTTPRequestHandler
-        self.httpd = socketserver.TCPServer(("0.0.0.0", HTTP_PORT), handler)
-        print(f"HTTP server started at http://localhost:{HTTP_PORT}")
-        self.httpd.serve_forever()
-    
-    def stop(self):
-        if self.httpd:
-            self.httpd.shutdown()
+
+# HTTP server as a function for background thread
+def run_http_server():
+    handler = http.server.SimpleHTTPRequestHandler
+    httpd = socketserver.TCPServer(("0.0.0.0", HTTP_PORT), handler)
+    print(f"HTTP server started at http://localhost:{HTTP_PORT}")
+    httpd.serve_forever()
 
 # WebSocket server handler
 async def counter_server(websocket):
@@ -338,36 +331,38 @@ class QRCodeWindow:
     def run(self):
         self.root.mainloop()
 
-async def start_websocket_server():
-    async with websockets.serve(counter_server, "0.0.0.0", WS_PORT):
-        print(f"WebSocket server started on 0.0.0.0:{WS_PORT}")
-        await asyncio.Future()  # Keep the server running forever
+
+# WebSocket server as a function for background thread
+def run_websocket_server():
+    async def ws_main():
+        async with websockets.serve(counter_server, "0.0.0.0", WS_PORT):
+            print(f"WebSocket server started on 0.0.0.0:{WS_PORT}")
+            await asyncio.Future()  # Run forever
+    asyncio.run(ws_main())
 
 def main():
+    import threading
     # Get local IP
     local_ip = get_local_ip()
-    
-    # Start HTTP server in a separate thread
-    http_server = ScoreCounterHTTPServer()
-    http_server.start()
-    print(f"HTTP server started on port {HTTP_PORT}")
-    
-    # Create and display the QR code window in a separate thread
-    url = f"http://{local_ip}:{HTTP_PORT}/buttons.html"
-    qr_thread = threading.Thread(target=lambda: QRCodeWindow(url).run(), daemon=True)
-    qr_thread.start()
-    
+
+    # Start HTTP server in a background thread
+    http_thread = threading.Thread(target=run_http_server, daemon=True)
+    http_thread.start()
+
+    # Start WebSocket server in a background thread
+    ws_thread = threading.Thread(target=run_websocket_server, daemon=True)
+    ws_thread.start()
+
     # Open the display page in the default browser
     display_url = f"http://localhost:{HTTP_PORT}/display.html"
     webbrowser.open(display_url)
-    
-    # Start WebSocket server in the main thread
+
+    # Create and display the QR code window on the main thread (macOS safe)
+    url = f"http://{local_ip}:{HTTP_PORT}/buttons.html"
     try:
-        asyncio.run(start_websocket_server())
+        QRCodeWindow(url).run()
     except KeyboardInterrupt:
         print("\nShutting down servers...")
-    finally:
-        http_server.stop()
 
 if __name__ == "__main__":
     main()

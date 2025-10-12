@@ -1,0 +1,28 @@
+/* Common styles for all counter pages */
+body { 
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+}
+
+.status {
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+#debug {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-width: 500px;
+    min-height: 100px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 12px;
+    display: none; /* Hidden by default */
+}

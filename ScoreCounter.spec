@@ -6,7 +6,12 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[('*.html', '.'), ('*.js', '.'), ('*.css', '.')],
-    hiddenimports=['PIL._tkinter', 'PIL._imagingtk', 'PIL._tkinter_finder'],
+    # Added firebase / google cloud related hidden imports so Firestore works in packaged app
+    hiddenimports=[
+        'PIL._tkinter', 'PIL._imagingtk', 'PIL._tkinter_finder',
+        'google.cloud', 'google.cloud.firestore', 'google.api_core',
+        'google.api_core.path_template', 'google.rpc', 'grpc', 'grpc._cython.cygrpc'
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
