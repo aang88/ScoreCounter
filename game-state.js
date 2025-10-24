@@ -197,7 +197,9 @@ class GameStateManager {
                 // Reset counters
                 console.log('Resetting counters for new game');
                 this.resetAllCounters();
-                
+                if (window.updateUIGameState) {
+                    window.updateUIGameState(true);
+                }
                 // Small delay to ensure reset is processed
                 setTimeout(() => {
                     // Reset timer
@@ -402,7 +404,14 @@ class GameStateManager {
                 return window.player2Name;
             }
         }
-        
+
+        const chungLabel = document.querySelector('#ChungTeam .counter-label');
+        const hongLabel = document.querySelector('#HongTeam .counter-label');
+        if (color === 'Chung' && chungLabel) {
+            return chungLabel.textContent || 'Chung';
+        } else if (color === 'Hong' && hongLabel) {
+            return hongLabel.textContent || 'Hong';
+        }
         // Last resort fallback to color name
         return color;
     }
@@ -509,7 +518,9 @@ class GameStateManager {
         this.isGameOver = true;
         this.isGameInProgress = false; // Mark game as not in progress
         //this.timerManager.pause();
-        
+        if (window.updateUIGameState) {
+            window.updateUIGameState(false);
+        }
         // If no winner was passed, calculate final scores and determine winner
         if (!overallWinner) {
             // Calculate based on match wins

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     window.player1Name = "Chung";
     window.player2Name = "Hong";
-
+    
     
     // Create game controls if they don't exist
     let gameControls = document.getElementById('gameControls');
@@ -184,9 +184,23 @@ document.addEventListener('DOMContentLoaded', function() {
         resetButton.style.color = 'white';
         resetButton.style.cursor = 'pointer';
         resetButton.style.fontFamily = 'Nunito Sans, sans-serif';
+
+        const editTimeButton = document.createElement('button');
+        editTimeButton.id = 'editTimeButton';
+        editTimeButton.className = 'timer-button';
+        editTimeButton.innerHTML = '<i class="fa-solid fa-clock"></i>';
+        editTimeButton.style.padding = '10px 20px';
+        editTimeButton.style.fontSize = '16px';
+        editTimeButton.style.border = 'none';
+        editTimeButton.style.borderRadius = '5px';
+        editTimeButton.style.backgroundColor = '#422d5e';
+        editTimeButton.style.color = 'white';
+        editTimeButton.style.cursor = 'pointer';
+        editTimeButton.style.fontFamily = 'Nunito Sans, sans-serif';
         
         timerControls.appendChild(startPauseButton);
         timerControls.appendChild(resetButton);
+        timerControls.appendChild(editTimeButton);
         timerContainer.appendChild(timerDisplay);
         timerContainer.appendChild(timerControls);
         document.body.appendChild(timerContainer);
@@ -376,10 +390,43 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up timer button events
     const startPauseButton = document.getElementById('startPauseButton');
     const resetButton = document.getElementById('resetButton');
+    const editTimeButton = document.getElementById('editTimeButton'); // ADD THIS LINE
+
+    // NOW define updateUIGameState function after all elements exist
+    function updateUIGameState(gameInProgress) {
+        console.log("Updating UI game state:", gameInProgress);
+        
+        // Update timer button states
+        if (startPauseButton) {
+            startPauseButton.disabled = !gameInProgress;
+            startPauseButton.style.opacity = gameInProgress ? '1' : '0.5';
+            startPauseButton.style.cursor = gameInProgress ? 'pointer' : 'not-allowed';
+        }
+        
+        if (resetButton) {
+            resetButton.disabled = !gameInProgress;
+            resetButton.style.opacity = gameInProgress ? '1' : '0.5';
+            resetButton.style.cursor = gameInProgress ? 'pointer' : 'not-allowed';
+        }
+
+        if (editTimeButton) {
+            editTimeButton.disabled = !gameInProgress;
+            editTimeButton.style.opacity = gameInProgress ? '1' : '0.5';
+            editTimeButton.style.cursor = gameInProgress ? 'pointer' : 'not-allowed';
+        }
+    }
+
+    // Make function globally available and initialize
+    window.updateUIGameState = updateUIGameState;
+    updateUIGameState(false);
     console.log("here");
     if (startPauseButton) {
         // printf("Setting up start/pause button event listener");
         startPauseButton.addEventListener('click', () => {
+            if (!gameState.isGameInProgress) {
+                console.log("Timer controls disabled - no game in progress");
+                return;
+            }
             if (timerManager.isRunning) {
                 console.log("Pausing timer");
                 timerManager.pause();
@@ -396,6 +443,49 @@ document.addEventListener('DOMContentLoaded', function() {
         resetButton.addEventListener('click', () => {
             timerManager.reset();
             startPauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+        });
+    }
+
+    if (editTimeButton) {
+        editTimeButton.addEventListener('click', () => {
+            if (!gameState.isGameInProgress) {
+                console.log("Timer edit disabled - no game in progress");
+                return;
+            }
+            
+            // Get current remaining time
+            let currentTime;
+            if (timerManager.isRunning) {
+                const elapsed = Date.now() - timerManager.startTime;
+                currentTime = Math.max(0, (timerManager.duration * 1000) - elapsed);
+            } else {
+                currentTime = timerManager.pausedTimeRemaining || (timerManager.duration * 1000);
+            }
+            
+            // Convert to seconds for display
+            const currentSeconds = Math.ceil(currentTime / 1000);
+            
+            // Ask user for new time
+            const newTime = prompt(`Current time: ${currentSeconds} seconds\nEnter new time (in seconds):`, currentSeconds);
+            
+            if (newTime !== null && !isNaN(newTime) && parseInt(newTime) >= 0) {
+                const newSeconds = parseInt(newTime);
+                console.log(`Changing timer to ${newSeconds} seconds`);
+                
+                // Update timer duration
+                timerManager.setDuration(newSeconds);
+                
+                // If timer is running, restart it with new time
+                if (timerManager.isRunning) {
+                    timerManager.reset();
+                    timerManager.start();
+                    startPauseButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                } else {
+                    // If paused, just reset with new duration
+                    timerManager.reset();
+                    startPauseButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                }
+            }
         });
     }
     
@@ -429,6 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
 
     
 

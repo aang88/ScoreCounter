@@ -49,6 +49,22 @@ class TimerManager {
         return this;
     }
 
+    setDuration(seconds) {
+        if (typeof seconds === 'number' && seconds > 0) {
+            this.duration = seconds;
+            this.pausedTimeRemaining = seconds * 1000; // Convert to milliseconds
+            
+            // Update display if not running
+            if (!this.isRunning) {
+                this.updateTimerDisplay(this.pausedTimeRemaining);
+            }
+            
+            console.log(`Timer duration set to ${seconds} seconds`);
+        } else {
+            console.warn('Invalid duration provided to setDuration:', seconds);
+        }
+    }
+
     // Register a callback for when the timer ends
     setOnTimerEnd(callback) {
         this.onTimerEnd = callback;

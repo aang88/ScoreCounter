@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const wsHost = window.location.hostname || 'localhost';
     const wsPort = '8765'; // Keep the same port
     const wsUrl = `ws://${wsHost}:${wsPort}`;
-    
+    let gameInProgress = false;
     // Initialize the counter manager with dynamic WebSocket URL
     const counterManager = new CounterManager(wsUrl);
     
@@ -36,6 +36,28 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Updating button states, isRunning:", isRunning);
         if (startTimerBtn) startTimerBtn.disabled = isRunning;
         if (pauseTimerBtn) pauseTimerBtn.disabled = !isRunning;
+    }
+
+    function updateGameButtonStates(gameActive) {
+        console.log("Updating game button states, gameActive:", gameActive);
+        gameInProgress = gameActive;
+        
+        // Disable/enable all scoring buttons
+        const scoringButtons = [
+            addButton1, addButton1Body, addButton1Spin, subtractButton1,
+            addButton2, addButton2Body, addButton2Spin, subtractButton2
+        ];
+        
+        scoringButtons.forEach(button => {
+            if (button) {
+                button.disabled = !gameActive;
+                button.style.opacity = gameActive ? '1' : '0.5';
+                button.style.cursor = gameActive ? 'pointer' : 'not-allowed';
+            }
+        });
+        
+        // Also update timer buttons
+        updateButtonStates(timerManager.isRunning && gameActive);
     }
     
     // Handle connection changes
@@ -79,38 +101,58 @@ document.addEventListener('DOMContentLoaded', function() {
             if (addButton1) {
                 console.log("Setting up event listener for addButton1");
                 addButton1.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("addButton1 clicked");
-                    counterManager.incrementCounter('Hong', 1, "Punch","Player1",timerManager.getCurrentTime()); // Increment by 1,
+                    counterManager.incrementCounter('Hong', 1, "Punch","Player1",timerManager.getCurrentTime());
                 });
             }
 
             if (addButton1Body) {
                 console.log("Setting up event listener for addButton1Body");
                 addButton1Body.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("addButton1Body clicked");
-                    counterManager.incrementCounter('Hong', 2,"Body Kick","Player2",timerManager.getCurrentTime()); // Increment by 1
+                    counterManager.incrementCounter('Hong', 2,"Body Kick","Player2",timerManager.getCurrentTime());
                 });
             }
 
             if (addButton1Spin) {
                 console.log("Setting up event listener for addButton1Spin");
                 addButton1Spin.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("addButton1Spin clicked");
-                    counterManager.incrementCounter('Hong', 4,"Spinning Kick","Player2",timerManager.getCurrentTime()); // Increment by 1
+                    counterManager.incrementCounter('Hong', 4,"Spinning Kick","Player2",timerManager.getCurrentTime());
                 });
             }
     
             if (subtractButton1) {
                 console.log("Setting up event listener for subtractButton1");
                 subtractButton1.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("subtractButton1 clicked");
-                    counterManager.decrementCounter('Hong',"Point Deduction","Player2",timerManager.getCurrentTime()); // Decrement by 1
+                    counterManager.decrementCounter('Hong',"Point Deduction","Player2",timerManager.getCurrentTime());
                 });
             }
     
             if (addButton2) {
                 console.log("Setting up event listener for addButton2");
                 addButton2.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("addButton2 clicked");
                     counterManager.incrementCounter('Chung',1,"Punch","Player2",timerManager.getCurrentTime());
                 });
@@ -119,24 +161,36 @@ document.addEventListener('DOMContentLoaded', function() {
             if (addButton2Body) {
                 console.log("Setting up event listener for addButton2Body");
                 addButton2Body.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("addButton2Body clicked");
-                    counterManager.incrementCounter('Chung', 2,"Body Kick","Player2",timerManager.getCurrentTime()); // Increment by 1
+                    counterManager.incrementCounter('Chung', 2,"Body Kick","Player2",timerManager.getCurrentTime());
                 });
             }
 
             if (addButton2Spin) {
                 console.log("Setting up event listener for addButton2Spin");
                 addButton2Spin.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("addButton2Spin clicked");
-                    counterManager.incrementCounter('Chung', 4,"Spinning Kick","Player2",timerManager.getCurrentTime()); // Increment by 1
+                    counterManager.incrementCounter('Chung', 4,"Spinning Kick","Player2",timerManager.getCurrentTime());
                 });
             }
     
             if (subtractButton2) {
                 console.log("Setting up event listener for subtractButton2");
                 subtractButton2.addEventListener('click', () => {
+                    if (!gameInProgress) {
+                        console.log("Scoring disabled - no game in progress");
+                        return;
+                    }
                     console.log("subtractButton2 clicked");
-                    counterManager.decrementCounter('Chung',"Point Deduction","Player2",timerManager.getCurrentTime()); // Decrement by 1
+                    counterManager.decrementCounter('Chung',"Point Deduction","Player2",timerManager.getCurrentTime());
                 });
             }
         } else {
@@ -242,15 +296,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Update button states based on the timer state
                     if (data.type === 'timer-start') {
                         console.log("Received start command from server");
+                        gameInProgress = true;
+                        updateGameButtonStates(true);
                         updateButtonStates(true);
                     } else if (data.type === 'timer-pause' || data.type === 'timer-ended') {
                         console.log("Received pause/end command from server");
                         updateButtonStates(false);
                     } else if (data.type === 'timer-reset') {
                         console.log("Received reset command from server");
+                        this.hideJudgeDecisionModal();
+                        gameInProgress = true;
+                        updateGameButtonStates(false);
                         updateButtonStates(false);
                     } else if (data.type === 'timer-sync') {
                         console.log("Syncing timer state, isRunning:", data.isRunning);
+                        this.hideJudgeDecisionModal();
                         updateButtonStates(!!data.isRunning);
                     }
                 }
