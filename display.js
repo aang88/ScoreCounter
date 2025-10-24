@@ -735,8 +735,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Replace the message handler after a small delay to ensure socket is created
         setTimeout(() => {
             if (this.socket) {
-
-                
                 // Store the original handler
                 const originalOnMessage = this.socket.onmessage;
                 
@@ -748,8 +746,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         const data = JSON.parse(event.data);
                         this.log(`Received message: ${event.data}`);
                         
+                        if (data.type === 'reset-counters') {
+                            console.log("Reset counters message received - zeroing all counters");
+                            // Reset all counter displays to zero
+                            for (const id of counterIds) {
+                                const element = counterValues[id];
+                                if (element) {
+                                    console.log(`Resetting ${id} to 0`);
+                                    element.textContent = '0';
+                                    
+                                    // Add animation for reset
+                                    element.style.transform = 'scale(0.8)';
+                                    element.style.transition = 'transform 0.3s';
+                                    setTimeout(() => {
+                                        element.style.transform = 'scale(1)';
+                                    }, 300);
+                                }
+                            }
+                            
+                            // Also reset our local counters object
+                            this.counters = {};
+                        }
                         // Handle counters update with direct DOM manipulation
-                        if (data.type === 'counters' && data.values) {
+                        else if (data.type === 'counters' && data.values) {
                             console.log("Counter update received:", data.values);
                             this.counters = data.values;
                             
@@ -774,33 +793,45 @@ document.addEventListener('DOMContentLoaded', function() {
                                 this.onCounterUpdate(this.counters);
                             }
                         }
-                        else if (data.type === 'reset-counters') {
-                            console.log("Reset counters message received - zeroing all counters");
-                            // Reset all counter displays to zero
-                            for (const id of counterIds) {
-                                const element = counterValues[id];
-                                if (element) {
-                                    console.log(`Resetting ${id} to 0`);
-                                    element.textContent = '0';
-                                    
-                                    // Add animation for reset
-                                    element.style.transform = 'scale(0.8)';
-                                    element.style.transition = 'transform 0.3s';
-                                    setTimeout(() => {
-                                        element.style.transform = 'scale(1)';
-                                    }, 300);
-                                }
-                            }
-                            
-                            // Also reset our local counters object
-                            this.counters = {};
+                        
+                        else if (data.type === 'judge-decision-request') {
+                            console.log("Judge decision requested for round:", data.round);
+                            showJudgeWaitingMessage(data.round);
                         }
+
+                        // Handle judge decisions - show result AND pass to game state manager
+                        else if (data.type === 'judge-decision') {
+                            console.log("Judge decision received:", data.winner, "for round:", data.round);
+                            hideJudgeWaitingMessage();
+                            
+                            // Pass the decision to the game state manager
+                            if (gameState) {
+                                console.log("Passing judge decision to game state manager");
+                                gameState.handleJudgeDecision(data.winner);
+                            } else {
+                                console.error("gameState not found!");
+                            }
+                        }
+
                         // Handle timer messages
                         else if (data.type && data.type.startsWith('timer-')) {
                             timerManager.handleServerMessage(data);
                             if (startPauseButton) {
                                 startPauseButton.innerHTML = timerManager.isRunning ? '<i class="fa-solid fa-pause"></i>' : 
             '<i class="fa-solid fa-play"></i>';
+                            }
+
+                            if ((data.type === 'timer-ended') &&
+                                data.pausedTimeRemaining !== undefined && 
+                                data.pausedTimeRemaining <= 0 && 
+                                gameState && 
+                                gameState.isGameInProgress && 
+                                !gameState.processingRoundEnd) {
+                                
+                                console.log("Timer naturally ended - triggering round end");
+                                setTimeout(() => {
+                                    gameState.handleRoundEnd();
+                                }, 100);
                             }
                         }
                         // For other message types, just call the original handler
@@ -833,6 +864,51 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (chungLabel) chungLabel.textContent = player1Name || 'Chung';
         if (hongLabel) hongLabel.textContent = player2Name || 'Hong';
+    }
+
+    function showJudgeWaitingMessage(round) {
+        console.log("Showing judge waiting message for round:", round);
+        
+        // Remove any existing message
+        hideJudgeWaitingMessage();
+        
+        const waitingDiv = document.createElement('div');
+        waitingDiv.id = 'judge-waiting-message';
+        waitingDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            font-size: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 2px solid #fff;
+        `;
+        waitingDiv.innerHTML = `
+            <h2 style="margin-bottom: 20px; font-size: 36px;">Round ${round}</h2>
+            <p style="margin-bottom: 15px; font-size: 24px;">Score: 0-0</p>
+            <p style="font-size: 28px; color: #ffeb3b;">Waiting for judge decision...</p>
+            <div style="margin-top: 20px; font-size: 18px; opacity: 0.8;">
+                Judge is selecting the winner
+            </div>
+        `;
+        
+        document.body.appendChild(waitingDiv);
+        console.log("Judge waiting message added to DOM");
+    }
+
+    // Function to hide judge waiting message
+    function hideJudgeWaitingMessage() {
+        const waitingDiv = document.getElementById('judge-waiting-message');
+        if (waitingDiv) {
+            console.log("Removing judge waiting message");
+            document.body.removeChild(waitingDiv);
+        }
     }
     
     // Handle connection changes

@@ -131,14 +131,21 @@ class GameStateManager {
         const roundScores = this.scores[`round${roundNum}`] || {};
         let highestScore = -1;
         let winner = 'None';
-        
+        let hasAnyScore = false;
+
         for (const [team, score] of Object.entries(roundScores)) {
+            if (score > 0) hasAnyScore = true;
+
             if (score > highestScore) {
                 highestScore = score;
                 winner = team;
             } else if (score === highestScore && score > 0) {
                 winner = 'Tie';
             }
+        }
+
+        if (!hasAnyScore || (highestScore === 0)) {
+            return 'Judge';
         }
         
         return winner;
@@ -183,24 +190,38 @@ class GameStateManager {
 
         // Set timer duration (2 minutes per round)
         this.timerManager.setDuration(duration);
+        const startGameWhenConnected = () => {
+            console.log('Starting game - connection status:', this.counterManager.connected);
+            
+            if (this.counterManager.connected) {
+                // Reset counters
+                console.log('Resetting counters for new game');
+                this.resetAllCounters();
+                
+                // Small delay to ensure reset is processed
+                setTimeout(() => {
+                    // Reset timer
+                    this.timerManager.reset();
+                    
+                    // Start timer for first round
+                    this.timerManager.start();
+                    
+                    // Update UI
+                    this.updateRoundInfo();
+                    this.updateRoundWinTracker();
+                    
+                    // Announce game start
+                    this.announceGameState(`Game started! Best of ${this.maxRounds} rounds`);
+                }, 200);
+            } else {
+                console.log('Not connected yet, waiting...');
+                // Wait a bit and try again
+                setTimeout(startGameWhenConnected, 500);
+            }
+        };
         
-        // Reset counters via WebSocket
-        this.resetAllCounters();
-        
-        // Reset timer
-        this.timerManager.reset();
-        
-
-        
-        // Start timer for first round
-        this.timerManager.start();
-        
-        // Update round info
-        this.updateRoundInfo();
-        this.updateRoundWinTracker();
-        
-        // Announce game start
-        this.announceGameState(`Game started! Best of ${this.maxRounds} rounds`);
+        // Start the process
+        startGameWhenConnected();
     }
     
     // Close any existing modal dialogs
@@ -234,31 +255,66 @@ class GameStateManager {
             // Determine round winner
             const roundWinner = this.determineRoundWinner(this.currentRound);
             console.log('Round winner determined:', roundWinner);
-            this.roundWinners.push(roundWinner);
-            this.updateRoundWinTracker();
-            
-            // Announce round result
-            this.announceGameState(`Round ${this.currentRound} complete! Winner: ${this.getPlayerName(roundWinner)}`);
-            
-            // Check if we have an overall winner
-            const overallWinner = this.checkForOverallWinner();
-            console.log('Overall winner check:', overallWinner);
-            
-            if (overallWinner || this.currentRound >= this.maxRounds) {
-                // We have a winner or reached max rounds, show round summary then end game
-                console.log('Displaying final round summary');
-                this.displayRoundSummary(true, overallWinner);
-            } else {
-                // No winner yet, show round summary and continue
-                console.log('Displaying round summary, continuing game');
-                this.displayRoundSummary(false);
+            if (roundWinner === 'Judge') {
+                this.requestJudgeDecision();
+                return; // Don't continue with normal flow
             }
+            this.completeRoundEnd(roundWinner);
+            
         } catch (error) {
             console.error('Error in handleRoundEnd:', error);
         } finally {
             // Always reset the flag, even if there's an error
             this.processingRoundEnd = false;
         }
+    }
+
+   requestJudgeDecision() {
+        console.log('Requesting judge decision for round:', this.currentRound);
+        
+        // Send judge decision request via WebSocket
+        if (this.counterManager.socket && this.counterManager.socket.readyState === WebSocket.OPEN) {
+            this.counterManager.socket.send(JSON.stringify({
+                type: 'judge-decision-request',
+                round: this.currentRound
+            }));
+        } else {
+            console.error('WebSocket not available for judge decision request');
+            // Fallback: treat as tie if no connection
+            this.handleJudgeDecision('Tie');
+        }
+    }
+
+    handleJudgeDecision(winner) {
+        console.log('Judge decided winner:', winner);
+    
+        // Complete the round end with the judge's decision
+        this.completeRoundEnd(winner);
+    }
+
+    completeRoundEnd(roundWinner) {
+        this.roundWinners.push(roundWinner);
+        this.updateRoundWinTracker();
+        
+        // Announce round result
+        this.announceGameState(`Round ${this.currentRound} complete! Winner: ${this.getPlayerName(roundWinner)}`);
+        
+        // Check if we have an overall winner
+        const overallWinner = this.checkForOverallWinner();
+        console.log('Overall winner check:', overallWinner);
+        
+        if (overallWinner || this.currentRound >= this.maxRounds) {
+            // We have a winner or reached max rounds, show round summary then end game
+            console.log('Displaying final round summary');
+            this.displayRoundSummary(true, overallWinner);
+        } else {
+            // No winner yet, show round summary and continue
+            console.log('Displaying round summary, continuing game');
+            this.displayRoundSummary(false);
+        }
+        
+        // Reset the processing flag
+        this.processingRoundEnd = false;
     }
     
     // Start the next round
@@ -296,6 +352,7 @@ class GameStateManager {
     // Reset all counters to zero
     resetAllCounters() {
         // Send reset message via WebSocket
+        console.log('Resetting all counters to zero');
         if (this.counterManager.socket && this.counterManager.socket.readyState === WebSocket.OPEN) {
             this.counterManager.socket.send(JSON.stringify({
                 type: 'reset-counters'

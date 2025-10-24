@@ -23,18 +23,19 @@ match_replay_holder = []
 round_count = 1
 chung_name = "Unknown"  # Add this line
 hong_name = "Unknown"
-cred = credentials.Certificate({
-    "type": "service_account",
-    "project_id": os.getenv('FIREBASE_PROJECT_ID'),
-    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
-    "private_key": os.getenv('FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
-    "client_email": os.getenv('FIREBASE_CLIENT_EMAIL'),
-    "client_id": os.getenv('FIREBASE_CLIENT_ID'),
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token"
-})
-firebase_admin.initialize_app(cred)
-db = firestore.client()
+# cred = credentials.Certificate({
+#     "type": "service_account",
+#     "project_id": os.getenv('FIREBASE_PROJECT_ID'),
+#     "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
+#     "private_key": os.getenv('FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
+#     "client_email": os.getenv('FIREBASE_CLIENT_EMAIL'),
+#     "client_id": os.getenv('FIREBASE_CLIENT_ID'),
+#     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+#     "token_uri": "https://oauth2.googleapis.com/token"
+# })
+# firebase_admin.initialize_app(cred)
+# db = firestore.client()
+db = None
 
 async def counter_server(websocket):
     global timer_state,round_count, match_replay_holder,chung_name, hong_name
@@ -78,7 +79,29 @@ async def counter_server(websocket):
             print(f"Received message from {client_info}: {message}")
             data = json.loads(message)
 
-            if data['type'] == 'subtract-counter':
+            # Handle judge decision request
+            if data.get("type") == "judge-decision-request":
+                print(f"Judge decision requested for round {data.get('round')}")
+                # Broadcast to all clients
+                await broadcast({
+                    "type": "judge-decision-request",
+                    "round": data.get("round", round_count)
+                })
+
+            # Handle judge decision
+            elif data.get("type") == "judge-decision":
+                winner = data.get("winner")
+                round_num = data.get("round", round_count)
+                print(f"Judge decided winner: {winner} for round {round_num}")
+                
+                # Broadcast to all clients
+                await broadcast({
+                    "type": "judge-decision",
+                    "winner": winner,
+                    "round": round_num
+                })
+
+            elif data['type'] == 'subtract-counter':
                 counter_id = data.get('counterId')
                 if not counter_id:
                     print("Warning: Received subtract-counter without counter ID")

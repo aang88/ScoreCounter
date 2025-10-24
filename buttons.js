@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const timerManager = new TimerManager(null);
     timerManager.setTimerElement(timerDisplay);
     timerManager.setDuration(60);
-    
+   
     // Function to update button states
     function updateButtonStates(isRunning) {
         console.log("Updating button states, isRunning:", isRunning);
@@ -214,6 +214,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
+                // Handle judge decision requests
+                if (data.type === 'judge-decision-request') {
+                    console.log("Judge decision requested for round:", data.round);
+                    this.showJudgeDecisionModal(data.round);
+                }
+
+                // Handle judge decisions from other clients
+                if (data.type === 'judge-decision') {
+                    console.log("Judge decision received:", data.winner, "for round:", data.round);
+                    this.hideJudgeDecisionModal();
+                    
+                }
+
                 
                
                 // Then handle timer updates - THIS IS THE KEY PART FOR TIMER SYNC
@@ -258,6 +271,133 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 30000);
     };
+
+    // Add judge decision modal methods to counterManager
+    counterManager.showJudgeDecisionModal = function(round) {
+        // Remove any existing modal
+        this.hideJudgeDecisionModal();
+        
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'judge-decision-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        `;
+        
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.id = 'judge-decision-modal';
+        modal.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        `;
+        
+        modal.innerHTML = `
+            <h2 style="margin-bottom: 20px; color: #333;">Round ${round} - Judge Decision</h2>
+            <div style="margin-bottom: 30px;">
+                <p style="font-size: 18px; color: #666; margin-bottom: 10px;">Score is 0-0</p>
+                <p style="font-size: 16px; color: #888;">Select the winner:</p>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button id="judge-chung-btn" style="
+                    padding: 15px 25px;
+                    font-size: 16px;
+                    background-color: #4285f4;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    min-width: 120px;
+                    transition: background-color 0.2s;
+                ">Chung Wins</button>
+                <button id="judge-hong-btn" style="
+                    padding: 15px 25px;
+                    font-size: 16px;
+                    background-color: #ea4335;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    min-width: 120px;
+                    transition: background-color 0.2s;
+                ">Hong Wins</button>
+                <button id="judge-tie-btn" style="
+                    padding: 15px 25px;
+                    font-size: 16px;
+                    background-color: #34a853;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    min-width: 120px;
+                    transition: background-color 0.2s;
+                ">Tie Round</button>
+            </div>
+        `;
+        
+        // Add hover effects
+        const style = document.createElement('style');
+        style.textContent = `
+            #judge-chung-btn:hover { background-color: #3367d6 !important; }
+            #judge-hong-btn:hover { background-color: #d33b2c !important; }
+            #judge-tie-btn:hover { background-color: #2d8f43 !important; }
+        `;
+        document.head.appendChild(style);
+        
+        // Add button event listeners
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Attach event listeners after elements are in DOM
+        document.getElementById('judge-chung-btn').onclick = () => {
+            this.sendJudgeDecision('Chung', round);
+        };
+        
+        document.getElementById('judge-hong-btn').onclick = () => {
+            this.sendJudgeDecision('Hong', round);
+        };
+        
+        document.getElementById('judge-tie-btn').onclick = () => {
+            this.sendJudgeDecision('Tie', round);
+        };
+    };
+
+    counterManager.hideJudgeDecisionModal = function() {
+        const overlay = document.getElementById('judge-decision-overlay');
+        if (overlay) {
+            document.body.removeChild(overlay);
+        }
+    };
+
+    counterManager.sendJudgeDecision = function(winner, round) {
+        console.log(`Sending judge decision: ${winner} wins round ${round}`);
+        
+        // Send decision to server
+        this.socket.send(JSON.stringify({
+            type: 'judge-decision',
+            winner: winner,
+            round: round
+        }));
+        
+        // Hide modal
+        this.hideJudgeDecisionModal();
+    };
+
+    
     
     // Connect to the server
     counterManager.connect();

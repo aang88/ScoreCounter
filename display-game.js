@@ -51,10 +51,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     highlight(blueCounterElement);
                 }
             }
+            
+            
         } catch (e) {
             console.error('Error processing message:', e);
         }
     };
+
+
     
     // Function to highlight counter that changed
     function highlight(element) {
