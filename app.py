@@ -30,7 +30,11 @@ timer_state = {
 # Get the application directory 
 if getattr(sys, 'frozen', False):
     # Running as compiled exe
-    app_dir = os.path.dirname(sys.executable)
+    exe_dir = os.path.dirname(sys.executable)
+    if os.path.exists(os.path.join(exe_dir, "display.html")):
+        app_dir = exe_dir
+    else:
+        app_dir = getattr(sys, '_MEIPASS', exe_dir)
 else:
     # Running as script
     app_dir = os.path.dirname(os.path.abspath(__file__))
